@@ -5,11 +5,11 @@
 
 window.MOG_CONFIG = {
   // Dedica mostrata nel finale, dopo aver battuto l'ultimo rivale
-  dedicaTitolo: "Dedicato al prof Rampino",
+  dedicaTitolo: "Dedicato al prof Paolino",
   dedicaSottotitolo: "Grazie per tutto quello che ci ha insegnato",
 
   // Lettere usate negli eventi rapidi (exploit)
-  lettereExploit: "EPICODE",
+  lettereExploit: "SCUOLA",
 
   // Consigli del Prof (il mentore che ti aiuta quando sei in difficoltà)
   consigliProf: [
