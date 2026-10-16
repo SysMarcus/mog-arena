@@ -317,7 +317,7 @@
     if (phase === "menu") {
       c.fillStyle = "rgba(10,10,18,.6)"; c.fillRect(0, 0, W, H); c.textAlign = "center";
       c.fillStyle = "#FAC775"; c.font = "500 " + Math.min(40, W / 12) + "px sans-serif"; c.fillText("MOG ARENA", W / 2, H * .32);
-      c.fillStyle = "#5DCAA5"; c.font = "500 16px monospace"; c.fillText("> epicode_edition.sh", W / 2, H * .32 + 30);
+      c.fillStyle = "#5DCAA5"; c.font = "500 16px monospace"; c.fillText("> scuola_edition.sh", W / 2, H * .32 + 30);
       c.fillStyle = "#D3D1C7"; c.font = "14px sans-serif"; c.fillText("6 studenti del corso. Una sola mascella sopravvive.", W / 2, H * .32 + 58);
       c.fillStyle = "#CECBF6"; c.fillText("Con la partecipazione speciale del Prof, il mentore", W / 2, H * .32 + 80);
       c.fillStyle = "#D3D1C7"; c.fillText("Premi spazio o tocca per iniziare", W / 2, H * .32 + 108);
