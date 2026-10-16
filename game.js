@@ -1,0 +1,361 @@
+// =============================================================
+//  MOG ARENA – motore di gioco
+//  Testi e rivali si modificano in config.js
+// =============================================================
+(function () {
+  "use strict";
+
+  const CFG = window.MOG_CONFIG;
+  const RIV = CFG.rivali;
+  const TIPS = CFG.consigliProf;
+  const LETTERS = CFG.lettereExploit;
+  const CH = "01$#>_{}[];/";
+
+  // ---------- Canvas ----------
+  const cv = document.getElementById("cv");
+  const c = cv.getContext("2d");
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  let W, H;
+  function resize() {
+    W = cv.clientWidth; H = cv.clientHeight;
+    cv.width = W * dpr; cv.height = H * dpr;
+    c.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  resize();
+  window.addEventListener("resize", resize);
+
+  // ---------- Stato ----------
+  let S = { jaw: 0, aura: 0, eyes: 0 }, pts = 0, lvl = 0, phase = "menu";
+  let pA = 0, rA = 0, t = 0, shake = 0, flash = 0;
+  let parts = [], txts = [], cracks = [], codeRain = [];
+  let qte = null, qteT = 2.5, endT = 0, win = false, combo = 0;
+  let tauntT = 1.5, bubble = null, fightT = 0, mentor = null, mentorUsed = false;
+  for (let i = 0; i < 40; i++) codeRain.push({ x: Math.random(), y: Math.random(), s: .3 + Math.random() });
+
+  // Record locale (solo nel browser del giocatore)
+  let best = 0;
+  try { best = parseInt(localStorage.getItem("mogArenaBest") || "0", 10) || 0; } catch (e) {}
+  function saveBest() {
+    if (lvl > best) { best = lvl; try { localStorage.setItem("mogArenaBest", String(best)); } catch (e) {} }
+  }
+
+  // ---------- Audio (generato dal browser) ----------
+  let AC = null;
+  function snd(f, d, type, v) {
+    try {
+      AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+      const o = AC.createOscillator(), g = AC.createGain();
+      o.type = type || "sine";
+      o.frequency.setValueAtTime(f, AC.currentTime);
+      o.frequency.exponentialRampToValueAtTime(Math.max(30, f * .4), AC.currentTime + d);
+      g.gain.setValueAtTime(v || .15, AC.currentTime);
+      g.gain.exponentialRampToValueAtTime(.001, AC.currentTime + d);
+      o.connect(g).connect(AC.destination);
+      o.start(); o.stop(AC.currentTime + d);
+    } catch (e) {}
+  }
+
+  // ---------- Effetti ----------
+  function burst(x, y, n, col, sp) {
+    for (let i = 0; i < n; i++) {
+      const a = Math.random() * 6.283, s = Math.random() * sp;
+      parts.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 1, l: 1, col, sz: 2 + Math.random() * 3 });
+    }
+  }
+  function popText(x, y, s, col) { txts.push({ x, y, s, col, l: 1 }); }
+
+  // ---------- Disegno personaggi ----------
+  function head(x, y, sc, jaw, eyes, col, aura, lose, glow, hood) {
+    c.save(); c.translate(x, y); c.scale(sc, sc);
+    if (aura > 5) {
+      for (let k = 0; k < 3; k++) {
+        const r = 95 + k * 18 + Math.sin(t * 6 + k) * 6 + aura * .35;
+        c.strokeStyle = col; c.globalAlpha = (aura / 100) * .35 / (k + 1); c.lineWidth = 3; c.beginPath();
+        for (let a = 0; a <= 6.3; a += .15) { const rr = r + Math.sin(a * 7 + t * 9 + k) * aura * .08; c.lineTo(Math.cos(a) * rr, Math.sin(a) * rr); }
+        c.closePath(); c.stroke();
+      }
+      c.globalAlpha = 1;
+    }
+    if (hood) { c.fillStyle = "#2C2C2A"; c.beginPath(); c.moveTo(-78, 90); c.quadraticCurveTo(-85, -110, 0, -112); c.quadraticCurveTo(85, -110, 78, 90); c.closePath(); c.fill(); }
+    const jw = 38 + jaw * 9, chin = 14 + jaw * 4;
+    c.fillStyle = lose ? "#5F5E5A" : "#E8C9A8"; c.strokeStyle = "#2C2C2A"; c.lineWidth = 2.5;
+    c.beginPath(); c.moveTo(-50, -55); c.quadraticCurveTo(0, -95, 50, -55); c.lineTo(52, 0); c.lineTo(jw, 35); c.lineTo(chin, 70); c.lineTo(-chin, 70); c.lineTo(-jw, 35); c.lineTo(-52, 0); c.closePath(); c.fill(); c.stroke();
+    if (!hood) { c.fillStyle = "#2C2C2A"; c.beginPath(); c.moveTo(-54, -50); c.quadraticCurveTo(-30, -110, 10, -92); c.quadraticCurveTo(50, -110, 56, -48); c.quadraticCurveTo(20, -72, -54, -50); c.fill(); }
+    if (jaw >= 3) { c.strokeStyle = "rgba(44,44,42,.35)"; c.lineWidth = 2; c.beginPath(); c.moveTo(-jw + 6, 32); c.lineTo(-chin - 4, 62); c.moveTo(jw - 6, 32); c.lineTo(chin + 4, 62); c.stroke(); }
+    const tilt = lose ? -.25 : eyes * .06;
+    if (eyes >= 4 && !lose) {
+      c.fillStyle = "#0a0a12"; c.beginPath(); c.roundRect(-46, -28, 40, 18, 5); c.roundRect(6, -28, 40, 18, 5); c.fill(); c.fillRect(-8, -24, 16, 4);
+      c.fillStyle = "#5DCAA5"; c.font = "9px monospace"; c.textAlign = "left"; c.fillText("root#", -42, -16); c.fillText("mog_", 10, -16);
+    } else {
+      c.strokeStyle = "#2C2C2A"; c.lineWidth = 3;
+      for (const sx of [-1, 1]) {
+        c.save(); c.translate(sx * 24, -20); c.rotate(sx * -tilt);
+        c.beginPath(); c.moveTo(-12, 0); c.quadraticCurveTo(0, lose ? 6 : -6, 12, 0); c.stroke();
+        c.fillStyle = "#2C2C2A"; c.beginPath(); c.arc(0, lose ? 3 : -1, 3.5, 0, 6.3); c.fill(); c.restore();
+        c.save(); c.translate(sx * 24, -34); c.rotate(sx * (lose ? .35 : -.15 - eyes * .04)); c.fillRect(-14, -2, 28, 4); c.restore();
+      }
+    }
+    c.strokeStyle = "#2C2C2A"; c.lineWidth = 2.5; c.beginPath(); c.moveTo(0, -10); c.lineTo(-5, 14); c.lineTo(4, 16); c.stroke();
+    c.beginPath();
+    if (lose) c.arc(0, 52, 10, 3.6, 5.8);
+    else if (glow) { c.moveTo(-14, 40); c.quadraticCurveTo(4, 48, 16, 36); }
+    else { c.moveTo(-12, 42); c.lineTo(12, 42); }
+    c.stroke();
+    if (lose) { c.fillStyle = "#85B7EB"; c.beginPath(); c.ellipse(-28, (t * 40) % 30, 3, 5, 0, 0, 6.3); c.fill(); }
+    c.restore();
+  }
+
+  function prof(x, y, sc, wave) {
+    c.save(); c.translate(x, y); c.scale(sc, sc);
+    c.strokeStyle = "rgba(250,199,117,.5)"; c.lineWidth = 2; c.beginPath(); c.ellipse(0, -78, 26, 7, 0, 0, 6.3); c.stroke();
+    c.fillStyle = "#534AB7"; c.beginPath(); c.moveTo(-42, 95); c.lineTo(-38, 40); c.quadraticCurveTo(0, 22, 38, 40); c.lineTo(42, 95); c.closePath(); c.fill();
+    c.fillStyle = "#F1EFE8"; c.beginPath(); c.moveTo(-10, 30); c.lineTo(0, 58); c.lineTo(10, 30); c.closePath(); c.fill();
+    c.fillStyle = "#E8C9A8"; c.strokeStyle = "#2C2C2A"; c.lineWidth = 2; c.beginPath(); c.ellipse(0, -10, 30, 36, 0, 0, 6.3); c.fill(); c.stroke();
+    c.fillStyle = "#888780"; c.beginPath(); c.ellipse(-28, -18, 7, 14, 0, 0, 6.3); c.ellipse(28, -18, 7, 14, 0, 0, 6.3); c.fill();
+    c.strokeStyle = "#2C2C2A"; c.lineWidth = 2; c.beginPath(); c.arc(-12, -12, 8, 0, 6.3); c.moveTo(20, -12); c.arc(12, -12, 8, 0, 6.3); c.stroke();
+    c.beginPath(); c.moveTo(-4, -12); c.lineTo(4, -12); c.stroke();
+    c.fillStyle = "#2C2C2A"; c.beginPath(); c.arc(-12, -12, 2.2, 0, 6.3); c.fill(); c.beginPath(); c.arc(12, -12, 2.2, 0, 6.3); c.fill();
+    c.beginPath(); c.moveTo(-10, 10); c.quadraticCurveTo(0, 18, 10, 10); c.stroke();
+    c.save(); c.translate(40, 40); c.rotate(-.6 + Math.sin(t * 6) * (wave ? .35 : 0));
+    c.fillStyle = "#534AB7"; c.fillRect(-6, -34, 12, 36); c.fillStyle = "#E8C9A8"; c.beginPath(); c.arc(0, -36, 7, 0, 6.3); c.fill();
+    c.fillStyle = "#E24B4A"; c.fillRect(-3, -56, 6, 18); c.restore();
+    c.restore();
+  }
+
+  function bar(x, y, w, v, col, label, right) {
+    c.fillStyle = "rgba(255,255,255,.08)"; c.beginPath(); c.roundRect(x, y, w, 14, 7); c.fill();
+    c.fillStyle = col; const fw = w * v / 100; c.beginPath(); c.roundRect(right ? x + w - fw : x, y, Math.max(fw, 1), 14, 7); c.fill();
+    c.fillStyle = "#D3D1C7"; c.font = "500 12px sans-serif"; c.textAlign = right ? "right" : "left";
+    c.fillText(label + "  " + Math.round(v) + "%", right ? x + w : x, y - 6);
+  }
+
+  function lightning(x1, y1, x2, y2, col) {
+    c.strokeStyle = col; c.lineWidth = 2; c.globalAlpha = .8; c.beginPath(); c.moveTo(x1, y1);
+    for (let i = 1; i < 10; i++) { const k = i / 10; c.lineTo(x1 + (x2 - x1) * k + (Math.random() - .5) * 14, y1 + (y2 - y1) * k + (Math.random() - .5) * 40); }
+    c.lineTo(x2, y2); c.stroke(); c.globalAlpha = 1;
+  }
+
+  // ---------- Logica ----------
+  function charge() {
+    if (phase !== "fight") return;
+    pA = Math.min(100, pA + 2.1 * (1 + S.aura * .3)); combo++;
+    shake = Math.max(shake, 1.5); burst(W * .25, H * .55, 4, "#5DCAA5", 4); snd(220 + pA * 4, .08, "square", .04);
+    if (combo % 15 === 0) { popText(W * .25, H * .3, "sudo combo x" + combo, "#FAC775"); pA = Math.min(100, pA + 5); }
+  }
+
+  function qteHit() {
+    const b = 12 * (1 + S.eyes * .4);
+    pA = Math.min(100, pA + b); rA = Math.max(0, rA - 8 - S.eyes * 2);
+    popText(W * .25, H * .25, qte.dt < .6 ? "Exploit riuscito" : "Accesso ottenuto", qte.dt < .6 ? "#FAC775" : "#9FE1CB");
+    burst(W * .5, H * .2, 25, "#FAC775", 7); shake = 8; snd(880, .25, "triangle", .12);
+    qte = null; qteT = 2 + Math.random() * 2;
+  }
+
+  function startFight() {
+    phase = "fight"; pA = 0; rA = 0; qte = null; qteT = 2; combo = 0; cracks = []; parts = []; txts = [];
+    endT = 0; bubble = null; tauntT = 1.2; fightT = 0; mentor = null; mentorUsed = false;
+    document.getElementById("big").textContent = "Carica aura";
+    snd(110, .4, "sawtooth", .1); ui();
+  }
+
+  function finish(w) {
+    phase = "end"; win = w; endT = 0; shake = 18; flash = 1; bubble = null; mentor = null;
+    if (w) {
+      const g = 40 + lvl * 35; pts += g;
+      popText(W / 2, H * .78, "+" + g + " mog points", "#FAC775");
+      for (let i = 0; i < 6; i++) burst(W * .75, H * .5, 30, ["#EF9F27", "#5DCAA5", "#7F77DD", "#F0997B"][i % 4], 10);
+      snd(80, 1.2, "sawtooth", .25); snd(660, .6, "triangle", .1);
+      lvl = Math.min(lvl + 1, RIV.length); saveBest();
+      if (lvl >= RIV.length) [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => snd(f, .5, "triangle", .12), i * 180));
+    } else {
+      for (let i = 0; i < 14; i++) { const a = Math.random() * 6.283; cracks.push({ a, l: 60 + Math.random() * 260, j: [...Array(6)].map(() => (Math.random() - .5) * 40) }); }
+      snd(55, 1.6, "sawtooth", .3); snd(40, 1.8, "square", .15);
+    }
+    ui();
+  }
+
+  function cst(s) { return 50 + S[s] * 60; }
+
+  function ui() {
+    document.getElementById("pts").textContent = pts;
+    document.getElementById("lv").textContent = Math.min(lvl + 1, RIV.length);
+    for (const s of ["jaw", "aura", "eyes"]) {
+      document.getElementById("p_" + s).textContent = "●".repeat(S[s]) + "○".repeat(5 - S[s]);
+      const b = document.querySelector('[data-s="' + s + '"]');
+      b.textContent = S[s] >= 5 ? "Massimo" : "Potenzia (" + cst(s) + ")";
+      b.style.opacity = (S[s] < 5 && pts >= cst(s)) ? 1 : .5;
+    }
+    const big = document.getElementById("big");
+    if (phase === "end") big.textContent = lvl >= RIV.length && win ? "Ricomincia il corso" : win ? "Prossimo studente" : "Riprova";
+    const rec = best > 0 ? " Record: " + best + "/" + RIV.length + "." : "";
+    document.getElementById("info").textContent = phase === "end"
+      ? (win ? (lvl >= RIV.length ? "Corso completato. Grazie, prof." : "Studente moggato. Spendi i mog points nei potenziamenti.") : "Sei stato moggato. Potenzia le statistiche e riprova.") + rec
+      : "Spazio o tocco per caricare l'aura. Se sei in difficoltà, arriva il Prof." + rec;
+  }
+
+  // ---------- Input ----------
+  cv.addEventListener("pointerdown", (e) => {
+    if (phase !== "fight") { if (phase === "menu") document.getElementById("big").click(); return; }
+    if (qte && !mentor) {
+      const r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+      if (Math.hypot(x - W / 2, y - H * .22) < 50) { qteHit(); return; }
+    }
+    charge();
+  });
+  document.getElementById("big").onclick = () => {
+    if (phase === "fight") charge();
+    else { if (lvl >= RIV.length) { lvl = 0; S = { jaw: 0, aura: 0, eyes: 0 }; pts = 0; } startFight(); }
+  };
+  window.addEventListener("keydown", (e) => {
+    if (e.code === "Space") {
+      e.preventDefault();
+      if (e.repeat) return;
+      if (phase === "fight") charge(); else document.getElementById("big").click();
+      return;
+    }
+    if (phase === "fight" && qte && !mentor && e.key.toUpperCase() === qte.k) qteHit();
+  });
+  document.querySelectorAll(".up button").forEach((b) => b.onclick = () => {
+    const s = b.dataset.s, cost = cst(s);
+    if (S[s] < 5 && pts >= cost) { pts -= cost; S[s]++; snd(520, .2, "triangle", .1); ui(); }
+  });
+  ui();
+
+  // ---------- Loop principale ----------
+  let last = performance.now();
+  function loop(now) {
+    const dt = Math.min(.05, (now - last) / 1000); last = now; t += dt;
+    const R = RIV[Math.min(lvl, RIV.length - 1)];
+
+    if (phase === "fight") {
+      fightT += dt;
+      pA = Math.min(100, pA + S.jaw * 1.4 * dt);
+      rA = Math.min(100, rA + R.r * 60 * dt * (.8 + Math.sin(t * 2) * .3));
+      qteT -= dt;
+      if (!qte && !mentor && qteT <= 0) { qte = { k: LETTERS[Math.floor(Math.random() * LETTERS.length)], dt: 0, life: 1.3 }; snd(990, .1, "square", .06); }
+      if (qte) { qte.dt += dt; if (qte.dt > qte.life) { qte = null; qteT = 2 + Math.random() * 2; rA = Math.min(100, rA + 6); popText(W * .75, H * .25, "Exploit fallito", "#F09595"); } }
+      tauntT -= dt;
+      if (tauntT <= 0 && !mentor) { bubble = { s: R.tt[Math.floor(Math.random() * R.tt.length)], l: 2.2 }; tauntT = 3.5 + Math.random() * 2; snd(300, .15, "triangle", .05); }
+      if (bubble) { bubble.l -= dt; if (bubble.l <= 0) bubble = null; }
+      if (!mentorUsed && fightT > 3 && rA - pA > 20 && rA > 45) {
+        mentorUsed = true; mentor = { k: 0, tip: TIPS[Math.floor(Math.random() * TIPS.length)], given: false }; bubble = null; qte = null;
+        [392, 523, 659].forEach((f, i) => setTimeout(() => snd(f, .4, "triangle", .1), i * 120));
+      }
+      if (mentor) {
+        mentor.k += dt;
+        if (mentor.k > 1.1 && !mentor.given) { mentor.given = true; pA = Math.min(100, pA + 25); rA = Math.max(0, rA - 10); burst(W * .25, H * .5, 40, "#AFA9EC", 8); popText(W * .25, H * .3, "Consiglio del prof: +25 aura", "#CECBF6"); flash = .3; }
+        if (mentor.k > 3.6) mentor = null;
+      }
+      if (pA >= 100) finish(true); else if (rA >= 100) finish(false);
+    }
+    if (phase === "end") endT += dt;
+    shake *= .88; flash *= .92;
+
+    c.save(); c.translate((Math.random() - .5) * shake, (Math.random() - .5) * shake);
+    c.fillStyle = "#0a0a12"; c.fillRect(-20, -20, W + 40, H + 40);
+
+    const tension = phase === "fight" ? Math.max(pA, rA) / 100 : 0;
+    c.font = "12px monospace"; c.textAlign = "left";
+    for (const d of codeRain) {
+      d.y += d.s * dt * (.15 + tension * .6);
+      if (d.y > 1.05) { d.y = -.05; d.x = Math.random(); }
+      c.fillStyle = "rgba(93,202,165," + (.08 + tension * .2) + ")";
+      for (let k = 0; k < 5; k++) c.fillText(CH[(k + Math.floor(t * 8 + d.x * 20)) % CH.length], d.x * W, d.y * H - k * 13);
+    }
+
+    const px = W * .25, rx = W * .75, hy = H * .55;
+    let ps = 1, rsc = 1;
+    if (phase === "end") { const k = Math.min(1, endT * 2); if (win) { ps = 1 + k * .35; rsc = 1 - k * .45; } else { ps = 1 - k * .45; rsc = 1 + k * .35; } }
+    if (phase === "fight" && pA > 55 && rA > 55 && Math.random() < .5) lightning(px + 60, hy - 20, rx - 60, hy - 20, Math.random() < .5 ? "#5DCAA5" : R.col);
+
+    const m = Math.min(1, W / 680) * 1.05;
+    const finale = phase === "end" && win && lvl >= RIV.length;
+    head(px, hy, ps * m, S.jaw + 1, S.eyes + 1, "#5DCAA5", phase === "end" ? (win ? 100 : 0) : pA, phase === "end" && !win, phase === "end" && win, 0);
+    if (!finale) head(rx, hy, rsc * m, R.j, R.e, R.col, phase === "end" ? (win ? 0 : 100) : rA, phase === "end" && win, phase === "end" && !win, R.hood);
+
+    c.font = "500 13px sans-serif"; c.textAlign = "center";
+    c.fillStyle = "#9FE1CB"; c.fillText("Tu", px, H - 18);
+    if (!finale) { c.fillStyle = R.col; c.fillText(R.n, rx, H - 18); }
+
+    if (mentor) {
+      const k = Math.min(1, mentor.k * 2.5), out = Math.max(0, mentor.k - 3) * 2, mx = W * .5, my = H + 60 - (k - out) * 190 * m;
+      prof(mx, my, m * .95, true);
+      c.font = "13px sans-serif"; const tw = c.measureText(mentor.tip).width + 20;
+      if (k >= 1 && out < .5) {
+        const bx = Math.max(8, Math.min(W - tw - 8, mx - tw / 2)), by = my - 150 * m;
+        c.fillStyle = "#CECBF6"; c.beginPath(); c.roundRect(bx, by, tw, 28, 8); c.fill();
+        c.fillStyle = "#26215C"; c.textAlign = "left"; c.fillText(mentor.tip, bx + 10, by + 19);
+      }
+    }
+    if (finale) {
+      const k = Math.min(1, endT * 1.2);
+      prof(rx, hy + 20 + (1 - k) * 200, m * 1.15, true);
+      c.font = "500 13px sans-serif"; c.textAlign = "center"; c.fillStyle = "#CECBF6"; c.fillText("Il Prof", rx, H - 18);
+    }
+    if (bubble && phase === "fight") {
+      c.font = "13px sans-serif";
+      const tw = c.measureText(bubble.s).width + 20, bx = Math.min(W - tw - 8, rx - tw / 2), by = hy - 150 * m;
+      c.globalAlpha = Math.min(1, bubble.l * 3); c.fillStyle = "#F1EFE8"; c.beginPath(); c.roundRect(bx, by, tw, 28, 8); c.fill();
+      c.beginPath(); c.moveTo(rx - 6, by + 28); c.lineTo(rx + 4, by + 38); c.lineTo(rx + 8, by + 28); c.fill();
+      c.fillStyle = "#2C2C2A"; c.textAlign = "left"; c.fillText(bubble.s, bx + 10, by + 19); c.globalAlpha = 1;
+    }
+    if (phase !== "menu" && !finale) { bar(20, 30, W * .4, pA, "#1D9E75", "Aura tua", false); bar(W * .6 - 20, 30, W * .4, rA, R.col, R.n, true); }
+
+    for (const p of parts) { p.x += p.vx; p.y += p.vy; p.vy += .12; p.l -= .015; c.globalAlpha = Math.max(0, p.l); c.fillStyle = p.col; c.fillRect(p.x, p.y, p.sz, p.sz); }
+    c.globalAlpha = 1; parts = parts.filter((p) => p.l > 0);
+    if (finale && Math.random() < .3) burst(Math.random() * W, -5, 3, ["#FAC775", "#AFA9EC", "#5DCAA5"][Math.floor(Math.random() * 3)], 2);
+    for (const x of txts) { x.y -= .6; x.l -= .012; c.globalAlpha = Math.max(0, x.l); c.fillStyle = x.col; c.font = "500 18px sans-serif"; c.textAlign = "center"; c.fillText(x.s, x.x, x.y); }
+    c.globalAlpha = 1; txts = txts.filter((x) => x.l > 0);
+
+    if (qte && !mentor) {
+      const k = 1 - qte.dt / qte.life;
+      c.fillStyle = "rgba(250,199,117,.15)"; c.beginPath(); c.arc(W / 2, H * .22, 40, 0, 6.3); c.fill();
+      c.strokeStyle = "#FAC775"; c.lineWidth = 4; c.beginPath(); c.arc(W / 2, H * .22, 40, -1.57, -1.57 + 6.283 * k); c.stroke();
+      c.fillStyle = "#FAC775"; c.font = "500 34px monospace"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText(qte.k, W / 2, H * .22 + 1); c.textBaseline = "alphabetic";
+    }
+
+    if (phase === "menu") {
+      c.fillStyle = "rgba(10,10,18,.6)"; c.fillRect(0, 0, W, H); c.textAlign = "center";
+      c.fillStyle = "#FAC775"; c.font = "500 " + Math.min(40, W / 12) + "px sans-serif"; c.fillText("MOG ARENA", W / 2, H * .32);
+      c.fillStyle = "#5DCAA5"; c.font = "500 16px monospace"; c.fillText("> epicode_edition.sh", W / 2, H * .32 + 30);
+      c.fillStyle = "#D3D1C7"; c.font = "14px sans-serif"; c.fillText("6 studenti del corso. Una sola mascella sopravvive.", W / 2, H * .32 + 58);
+      c.fillStyle = "#CECBF6"; c.fillText("Con la partecipazione speciale del Prof, il mentore", W / 2, H * .32 + 80);
+      c.fillStyle = "#D3D1C7"; c.fillText("Premi spazio o tocca per iniziare", W / 2, H * .32 + 108);
+    }
+    c.restore();
+
+    if (phase === "end") {
+      if (!win) {
+        c.strokeStyle = "rgba(255,255,255,.55)"; c.lineWidth = 1.5;
+        for (const k of cracks) {
+          const L = k.l * Math.min(1, endT * 3); c.beginPath(); c.moveTo(W / 2, H / 2);
+          for (let i = 1; i <= 6; i++) { const d = L * i / 6; c.lineTo(W / 2 + Math.cos(k.a) * d + k.j[i - 1] * Math.sin(k.a), H / 2 + Math.sin(k.a) * d - k.j[i - 1] * Math.cos(k.a)); }
+          c.stroke();
+        }
+        c.fillStyle = "rgba(120,0,0," + Math.min(.35, endT * .5) + ")"; c.fillRect(0, 0, W, H);
+      }
+      const k = Math.min(1, endT * 2.5), sc = k < 1 ? .3 + k * k * 1.1 : 1 + Math.sin(t * 5) * .03;
+      c.save(); c.translate(W / 2, H * .17 + Math.sin(t * 3) * 3); c.scale(sc, sc); c.textAlign = "center"; c.textBaseline = "middle";
+      const fs = Math.min(finale ? 36 : 46, W / 15); c.font = "500 " + fs + "px sans-serif";
+      const msg = finale ? "CORSO COMPLETATO" : win ? "STUDENTE MOGGATO" : "YOU HAVE BEEN MOGGED";
+      for (let i = 4; i > 0; i--) { c.fillStyle = win ? "rgba(239,159,39,.12)" : "rgba(226,75,74,.15)"; c.fillText(msg, i * 1.5, i * 1.5); }
+      c.fillStyle = win ? "#FAC775" : "#F09595"; c.fillText(msg, 0, 0);
+      if (endT > .6) {
+        c.font = "14px monospace"; c.fillStyle = "#D3D1C7";
+        c.fillText(finale ? "[+] tutti gli studenti pwned" : win ? "[+] " + RIV[Math.max(0, lvl - 1)].n + " pwned" : "[-] da " + R.n, 0, fs * .85);
+      }
+      c.restore();
+      if (finale && endT > 1.5) {
+        c.globalAlpha = Math.min(1, endT - 1.5);
+        const bw = Math.min(W - 40, 440), bx = (W - bw) / 2, by = H * .3;
+        c.fillStyle = "rgba(38,33,92,.85)"; c.beginPath(); c.roundRect(bx, by, bw, 62, 10); c.fill();
+        c.textAlign = "center"; c.fillStyle = "#FAC775"; c.font = "500 17px sans-serif"; c.fillText(CFG.dedicaTitolo, W / 2, by + 26);
+        c.fillStyle = "#CECBF6"; c.font = "13px sans-serif"; c.fillText(CFG.dedicaSottotitolo, W / 2, by + 47);
+        c.globalAlpha = 1;
+      }
+    }
+    if (flash > .02) { c.fillStyle = "rgba(255,255,255," + flash + ")"; c.fillRect(0, 0, W, H); }
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+})();

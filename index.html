@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mog Arena – Epicode Edition</title>
+  <meta name="description" content="Mog Arena: carica l'aura e mogga gli studenti del corso. Con la partecipazione speciale del Prof.">
+  <meta property="og:title" content="Mog Arena – Epicode Edition">
+  <meta property="og:description" content="Carica l'aura, lancia gli exploit, mogga tutti. Riuscirai a completare il corso?">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="wrap">
+    <header class="top">
+      <h1>Mog Arena <span class="tag">Epicode edition</span></h1>
+    </header>
+
+    <div class="stage">
+      <canvas id="cv" aria-label="Arena di gioco"></canvas>
+    </div>
+
+    <div class="row">
+      <button id="big" class="primary">Inizia la sfida</button>
+      <span id="info"></span>
+      <div class="spacer"></div>
+      <span class="stat">Mog points: <b id="pts">0</b></span>
+      <span class="stat">Studente: <b id="lv">1</b>/6</span>
+    </div>
+
+    <div class="row upgrades">
+      <div class="up"><b>Mascella</b> <span class="pips" id="p_jaw"></span><br>Aura passiva, come un cron job<button data-s="jaw"></button></div>
+      <div class="up"><b>Aura</b> <span class="pips" id="p_aura"></span><br>Più carica per ogni clic<button data-s="aura"></button></div>
+      <div class="up"><b>Sguardo</b> <span class="pips" id="p_eyes"></span><br>Exploit rapidi più potenti<button data-s="eyes"></button></div>
+    </div>
+
+    <details class="help">
+      <summary>Come si gioca</summary>
+      <ul>
+        <li>Premi <kbd>Spazio</kbd> o tocca l'arena per caricare l'aura. Chi arriva prima al 100% mogga l'altro.</li>
+        <li>Quando compare una lettera nel cerchio dorato, premila sulla tastiera (o tocca il cerchio da telefono) per lanciare un exploit.</li>
+        <li>Se sei in difficoltà, una volta per sfida arriva il Prof a darti una mano.</li>
+        <li>Con i mog points potenzi Mascella, Aura e Sguardo.</li>
+      </ul>
+    </details>
+
+    <footer class="foot">Fatto con aura e mascella. Audio generato dal browser: alza il volume.</footer>
+  </main>
+  <script src="config.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>

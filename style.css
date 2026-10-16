@@ -1,0 +1,60 @@
+:root {
+  --bg: #f6f5f1;
+  --surface: #ffffff;
+  --surface-1: #efede6;
+  --text: #1f1e1c;
+  --text-2: #5f5e5a;
+  --border: rgba(0, 0, 0, .12);
+  --accent: #534ab7;
+  --accent-bg: #eeedfe;
+  --radius: 8px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #121217;
+    --surface: #1b1b22;
+    --surface-1: #22222b;
+    --text: #ecebe6;
+    --text-2: #b4b2a9;
+    --border: rgba(255, 255, 255, .14);
+    --accent: #afa9ec;
+    --accent-bg: #26215c;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.5;
+}
+.wrap { max-width: 900px; margin: 0 auto; padding: 16px; }
+.top h1 { font-size: 22px; font-weight: 500; margin: 8px 0 14px; }
+.tag {
+  font-size: 13px; font-weight: 500; vertical-align: middle;
+  background: var(--accent-bg); color: var(--accent);
+  padding: 3px 10px; border-radius: var(--radius); margin-left: 6px;
+}
+.stage { border-radius: 12px; overflow: hidden; background: #0a0a12; user-select: none; }
+#cv { display: block; width: 100%; height: min(60vh, 460px); min-height: 340px; touch-action: manipulation; cursor: pointer; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 12px; font-size: 14px; color: var(--text-2); }
+.spacer { flex: 1; }
+.stat b { color: var(--text); font-weight: 500; }
+button {
+  font: inherit; font-size: 14px; color: var(--text);
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 8px 14px; cursor: pointer;
+  transition: transform .08s, background .15s;
+}
+button:hover { background: var(--surface-1); }
+button:active { transform: scale(.97); }
+button.primary { font-size: 16px; font-weight: 500; padding: 10px 22px; background: var(--accent-bg); color: var(--accent); border-color: var(--accent); }
+.up { flex: 1; min-width: 180px; background: var(--surface-1); border-radius: var(--radius); padding: 10px 12px; }
+.up b { color: var(--text); font-weight: 500; }
+.up button { width: 100%; margin-top: 8px; }
+.pips { letter-spacing: 2px; color: var(--accent); }
+.help { margin-top: 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 10px 16px; font-size: 14px; }
+.help summary { cursor: pointer; font-weight: 500; }
+kbd { border: 1px solid var(--border); border-radius: 4px; padding: 0 5px; font-size: 12px; }
+.foot { margin: 20px 0 8px; font-size: 12px; color: var(--text-2); text-align: center; }
