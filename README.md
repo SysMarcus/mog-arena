@@ -27,7 +27,7 @@ In arrivo
 Modalità multiplayer con sfide online tra due giocatori.
 
 Dedica
-Dedicato al prof Rampino, grazie per tutto quello che ci ha insegnato.
+Dedicato al prof Paolino, grazie per tutto quello che ci ha insegnato.
 
 Licenza
 MIT – vedi il file LICENSE.
