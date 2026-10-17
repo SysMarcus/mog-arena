@@ -150,7 +150,7 @@ continuano a crescere con i potenziamenti. Con il negozio (feature 4) alcune opz
 
 ## 4. Negozio oggetti
 
-**Stato:** da decidere · **Dimensione:** M · **Dipende da:** 0, 1, 3 (e 2 per i consumabili)
+**Stato:** fatta · **Dimensione:** M · **Dipende da:** 0, 1, 3
 
 **Cosa:** una schermata dove spendere i mog points in oggetti estetici (feature 3) e potenziamenti
 (feature 2), con categorie, prezzo, "posseduto/equipaggiato".
@@ -168,6 +168,14 @@ server**, altrimenti chiunque si "regala" tutto. Per questo consiglio che in mul
 siano solo estetici (vedi feature 7).
 
 **Deciso:** solo mog points, niente soldi veri.
+
+**Fatto:** il pannello "Personaggio e negozio" mostra i mog points e il prezzo degli oggetti bloccati;
+un clic compra e indossa. Colori di capelli e aura, occhiali e accessori hanno un `costo` in
+`config.js` → `aspetto` (le tonalità della pelle restano gratuite). Nuovi oggetti: capelli bianchi,
+aura rubino, visore animato, corona. Ogni giorno un oggetto è a metà prezzo (offerta del giorno, scelta
+dalla data). Gli oggetti comprati restano dopo il prestigio. Chi aveva già un oggetto addosso dalla
+versione precedente lo tiene gratis. Al caricamento si accettano solo oggetti esistenti nel catalogo.
+I potenziamenti restano nella loro riga sotto l'arena.
 
 ---
 

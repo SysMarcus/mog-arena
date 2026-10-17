@@ -30,8 +30,11 @@ window.MOG_CONFIG = {
   testoPrestigio: "Prestigio: ricomincia più forte",
   infoPrestigio: "Con il prestigio ricominci il corso con un bonus permanente, ma i rivali diventano più forti.",
 
-  // Aspetto del tuo personaggio (pannello "Personaggio").
+  // Aspetto del tuo personaggio e negozio (pannello "Personaggio e negozio").
   // La prima opzione di ogni gruppo è quella di partenza.
+  // costo = prezzo in mog points; senza costo l'opzione è gratuita.
+  // Le tonalità della pelle restano tutte gratuite.
+  // Gli oggetti comprati restano tuoi anche dopo il prestigio.
   // tipo "colore" = campioni di colore, tipo "oggetto" = accessori disegnati da game.js
   // (gli id degli oggetti sono usati da game.js per disegnarli: non cambiarli).
   // Solo stili inventati: niente che riproduca persone reali o marchi.
@@ -46,29 +49,38 @@ window.MOG_CONFIG = {
       { id: "castano", nome: "Castani", col: "#6B4226" },
       { id: "biondo",  nome: "Biondi",  col: "#D8B45A" },
       { id: "rosso",   nome: "Rossi",   col: "#B5482A" },
-      { id: "viola",   nome: "Viola",   col: "#7F77DD" },
-      { id: "verde",   nome: "Verdi",   col: "#1D9E75" } ] },
+      { id: "viola",   nome: "Viola",   col: "#7F77DD", costo: 80 },
+      { id: "verde",   nome: "Verdi",   col: "#1D9E75", costo: 80 },
+      { id: "bianco",  nome: "Bianchi", col: "#F1EFE8", costo: 150 } ] },
     { id: "aura", nome: "Colore aura", tipo: "colore", opzioni: [
       { id: "menta", nome: "Menta", col: "#5DCAA5" },
-      { id: "oro",   nome: "Oro",   col: "#EF9F27" },
-      { id: "lilla", nome: "Lilla", col: "#AFA9EC" },
-      { id: "corallo", nome: "Corallo", col: "#F0997B" },
-      { id: "cielo", nome: "Cielo", col: "#85B7EB" } ] },
+      { id: "oro",   nome: "Oro",   col: "#EF9F27", costo: 120 },
+      { id: "lilla", nome: "Lilla", col: "#AFA9EC", costo: 100 },
+      { id: "corallo", nome: "Corallo", col: "#F0997B", costo: 100 },
+      { id: "cielo", nome: "Cielo", col: "#85B7EB", costo: 100 },
+      { id: "rubino", nome: "Rubino", col: "#E24B4A", costo: 250 } ] },
     { id: "occhiali", nome: "Occhiali", tipo: "oggetto", opzioni: [
       { id: "nessuno", nome: "Nessuno" },
-      { id: "tondi",   nome: "Tondi" },
-      { id: "sole",    nome: "Da sole" } ] },
+      { id: "tondi",   nome: "Tondi",   costo: 60 },
+      { id: "sole",    nome: "Da sole", costo: 120 },
+      { id: "visore",  nome: "Visore",  costo: 300 } ] },
     { id: "testa", nome: "In testa", tipo: "oggetto", opzioni: [
       { id: "nessuno",    nome: "Niente" },
-      { id: "cappellino", nome: "Cappellino" },
-      { id: "cuffie",     nome: "Cuffie" },
-      { id: "bandana",    nome: "Bandana" },
-      { id: "felpa",      nome: "Cappuccio" } ] }
+      { id: "cappellino", nome: "Cappellino", costo: 80 },
+      { id: "cuffie",     nome: "Cuffie",     costo: 120 },
+      { id: "bandana",    nome: "Bandana",    costo: 80 },
+      { id: "felpa",      nome: "Cappuccio",  costo: 150 },
+      { id: "corona",     nome: "Corona",     costo: 600 } ] }
   ],
+
+  // Testi del negozio
+  testoOfferta: "Offerta del giorno: metà prezzo per",
+  testoServono: "Ti servono altri mog points:",
+  testoComprato: "Comprato:",
 
   // Testi del salvataggio
   testoAzzera: "Azzera progressi",
-  confermaAzzera: "Vuoi cancellare mog points, potenziamenti, prestigio e record? Non si può annullare.",
+  confermaAzzera: "Vuoi cancellare mog points, potenziamenti, oggetti comprati, prestigio e record? Non si può annullare.",
 
   // Lettere usate negli eventi rapidi (exploit)
   lettereExploit: "SCUOLA",

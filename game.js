@@ -29,7 +29,7 @@
   window.addEventListener("resize", resize);
 
   // ---------- Stato ----------
-  let S = freshStats(), look = freshLook(), pts = 0, lvl = 0, prestige = 0, phase = "menu", clicks = [];
+  let S = freshStats(), look = freshLook(), owned = new Set(), pts = 0, lvl = 0, prestige = 0, phase = "menu", clicks = [];
   let pA = 0, rA = 0, t = 0, shake = 0, flash = 0;
   let parts = [], txts = [], cracks = [], codeRain = [];
   let qte = null, qteT = 2.5, endT = 0, win = false, combo = 0;
@@ -44,6 +44,18 @@
 
   function freshStats() { const o = {}; for (const u of UPS) o[u.id] = 0; return o; }
   function freshLook() { const o = {}; for (const g of LOOKS) o[g.id] = g.opzioni[0].id; return o; }
+
+  // ---------- Negozio ----------
+  // Un oggetto è "gruppo:opzione"; senza costo è gratuito e sempre disponibile
+  const okey = (gid, oid) => gid + ":" + oid;
+  const isPaid = (o) => o.costo > 0;
+  const hasIt = (gid, o) => !isPaid(o) || owned.has(okey(gid, o.id));
+  const PAID = [];
+  for (const g of LOOKS) for (const o of g.opzioni) if (isPaid(o)) PAID.push({ g, o });
+  // Offerta del giorno: un oggetto a metà prezzo, scelto dalla data (cambia a mezzanotte UTC)
+  const DEAL = PAID.length ? PAID[Math.floor(Date.now() / 864e5) % PAID.length] : null;
+  const isDeal = (gid, o) => DEAL && DEAL.g.id === gid && DEAL.o.id === o.id;
+  const price = (gid, o) => isDeal(gid, o) ? Math.ceil(o.costo / 2) : (o.costo || 0);
   // Numero intero tra min e max, altrimenti il valore di riserva
   function intIn(v, min, max, def) { return Number.isInteger(v) && v >= min && v <= max ? v : def; }
 
@@ -59,18 +71,25 @@
       for (const u of UPS) S[u.id] = intIn(st[u.id], 0, u.max, 0);
       // Aspetto: si accettano solo id presenti nel catalogo
       const lk = d.look && typeof d.look === "object" ? d.look : {};
-      for (const g of LOOKS) if (g.opzioni.some((o) => o.id === lk[g.id])) look[g.id] = lk[g.id];
+      if (Array.isArray(d.owned)) {
+        // Solo oggetti a pagamento che esistono nel catalogo
+        for (const { g, o } of PAID) if (d.owned.includes(okey(g.id, o.id))) owned.add(okey(g.id, o.id));
+      } else {
+        // Salvataggio di prima del negozio: ciò che avevi addosso diventa tuo
+        for (const { g, o } of PAID) if (lk[g.id] === o.id) owned.add(okey(g.id, o.id));
+      }
+      for (const g of LOOKS) { const o = g.opzioni.find((x) => x.id === lk[g.id]); if (o && hasIt(g.id, o)) look[g.id] = o.id; }
       return;
     }
     // Primo avvio con il nuovo salvataggio: recupera il vecchio record
     try { best = intIn(parseInt(localStorage.getItem("mogArenaBest") || "0", 10), 0, RIV.length, 0); } catch (e) {}
   }
   function save() {
-    try { localStorage.setItem(SAVE_KEY, JSON.stringify({ v: SAVE_V, pts, lvl, best, prestige, stats: S, look })); } catch (e) {}
+    try { localStorage.setItem(SAVE_KEY, JSON.stringify({ v: SAVE_V, pts, lvl, best, prestige, stats: S, look, owned: [...owned] })); } catch (e) {}
   }
   function saveBest() { if (lvl > best) best = lvl; save(); }
   function resetAll() {
-    S = freshStats(); look = freshLook(); pts = 0; lvl = 0; best = 0; prestige = 0;
+    S = freshStats(); look = freshLook(); owned = new Set(); pts = 0; lvl = 0; best = 0; prestige = 0;
     try { localStorage.removeItem(SAVE_KEY); localStorage.removeItem("mogArenaBest"); } catch (e) {}
   }
   load();
@@ -106,7 +125,7 @@
 
   // ---------- Disegno personaggi ----------
   // Opzione scelta di un gruppo dell'aspetto (vedi config.js → aspetto)
-  function pick(gid) { const g = LOOKS.find((x) => x.id === gid); return g.opzioni.find((o) => o.id === look[gid]) || g.opzioni[0]; }
+  function pick(gid) { const g = LOOKS.find((x) => x.id === gid), o = g.opzioni.find((x) => x.id === look[gid]); return o && hasIt(gid, o) ? o : g.opzioni[0]; }
   function playerLook() { return { skin: pick("pelle").col, hair: pick("capelli").col, aura: pick("aura").col, glasses: pick("occhiali").id, hat: pick("testa").id }; }
 
   // L = aspetto del giocatore; i rivali lo omettono e usano i colori di sempre
@@ -133,6 +152,10 @@
     if (L.glasses === "sole" && !lose) {
       c.fillStyle = "#0a0a12"; c.beginPath(); c.roundRect(-46, -30, 40, 20, 8); c.roundRect(6, -30, 40, 20, 8); c.fill(); c.fillRect(-8, -25, 16, 4);
       c.strokeStyle = "rgba(255,255,255,.35)"; c.lineWidth = 2; c.beginPath(); c.moveTo(-38, -25); c.lineTo(-28, -25); c.moveTo(14, -25); c.lineTo(24, -25); c.stroke();
+    } else if (L.glasses === "visore" && !lose) {
+      c.fillStyle = "#0a0a12"; c.beginPath(); c.roundRect(-52, -32, 104, 22, 11); c.fill();
+      c.fillStyle = col; c.globalAlpha = .55 + Math.sin(t * 4) * .2; c.beginPath(); c.roundRect(-46, -27, 92, 12, 6); c.fill(); c.globalAlpha = 1;
+      c.fillStyle = "rgba(255,255,255,.6)"; c.fillRect(-46 + ((t * 60) % 86), -27, 6, 12);
     } else if (eyes >= 4 && !lose && L.glasses !== "tondi") {
       c.fillStyle = "#0a0a12"; c.beginPath(); c.roundRect(-46, -28, 40, 18, 5); c.roundRect(6, -28, 40, 18, 5); c.fill(); c.fillRect(-8, -24, 16, 4);
       c.fillStyle = "#5DCAA5"; c.font = "9px monospace"; c.textAlign = "left"; c.fillText("root#", -42, -16); c.fillText("mog_", 10, -16);
@@ -167,6 +190,10 @@
       c.strokeStyle = "#444441"; c.lineWidth = 7; c.beginPath(); c.arc(0, -22, 64, Math.PI * 1.05, Math.PI * 1.95); c.stroke();
       c.strokeStyle = "#2C2C2A"; c.lineWidth = 2;
       c.beginPath(); c.roundRect(-68, -36, 18, 38, 7); c.roundRect(50, -36, 18, 38, 7); c.fill(); c.stroke();
+    } else if (id === "corona") {
+      c.fillStyle = "#FAC775"; c.beginPath(); c.moveTo(-44, -70); c.lineTo(-44, -112); c.lineTo(-22, -88); c.lineTo(0, -122); c.lineTo(22, -88); c.lineTo(44, -112); c.lineTo(44, -70); c.closePath(); c.fill(); c.stroke();
+      c.fillStyle = "#E24B4A"; c.beginPath(); c.arc(0, -82, 5, 0, 6.3); c.fill();
+      c.fillStyle = col; c.beginPath(); c.arc(-26, -78, 4, 0, 6.3); c.arc(26, -78, 4, 0, 6.3); c.fill();
     } else if (id === "bandana") {
       c.beginPath(); c.moveTo(-53, -60); c.quadraticCurveTo(0, -84, 53, -60); c.lineTo(53, -47); c.quadraticCurveTo(0, -70, -53, -47); c.closePath(); c.fill(); c.stroke();
       c.beginPath(); c.moveTo(52, -54); c.lineTo(72, -64); c.lineTo(68, -44); c.closePath(); c.fill(); c.stroke();
@@ -281,10 +308,21 @@
       const btn = document.createElement("button");
       if (g.tipo === "colore") { btn.className = "sw"; btn.style.background = o.col; btn.title = o.nome; btn.setAttribute("aria-label", g.nome + ": " + o.nome); }
       else btn.textContent = o.nome;
-      btn.onclick = () => { look[g.id] = o.id; save(); ui(); };
-      opts.appendChild(btn); lookBtns.push({ btn, g: g.id, o: o.id });
+      btn.onclick = () => buyOrWear(g, o);
+      opts.appendChild(btn); lookBtns.push({ btn, g, o });
     }
     document.getElementById("lookopts").appendChild(row);
+  }
+
+  const shopMsg = document.getElementById("shopmsg");
+  function buyOrWear(g, o) {
+    if (!hasIt(g.id, o)) {
+      const p = price(g.id, o);
+      if (pts < p) { shopMsg.textContent = CFG.testoServono + " " + (p - pts) + "."; return; }
+      pts -= p; owned.add(okey(g.id, o.id)); snd(660, .25, "triangle", .1);
+      shopMsg.textContent = CFG.testoComprato + " " + o.nome + " (" + p + ").";
+    } else shopMsg.textContent = "";
+    look[g.id] = o.id; save(); ui();
   }
 
   // Anteprima del personaggio nel pannello, ridisegnata solo quando è aperto
@@ -299,7 +337,17 @@
   }
 
   function ui() {
-    for (const b of lookBtns) b.btn.setAttribute("aria-pressed", look[b.g] === b.o ? "true" : "false");
+    for (const { btn, g, o } of lookBtns) {
+      const locked = !hasIt(g.id, o), p = price(g.id, o);
+      btn.setAttribute("aria-pressed", pick(g.id) === o ? "true" : "false");
+      btn.classList.toggle("locked", locked);
+      btn.classList.toggle("deal", locked && isDeal(g.id, o));
+      if (g.tipo === "colore") { btn.dataset.cost = locked ? p : ""; btn.title = o.nome + (locked ? " · " + p + " mog points" : ""); }
+      else btn.textContent = o.nome + (locked ? " · " + p : "");
+    }
+    document.getElementById("pts2").textContent = pts;
+    document.getElementById("deal").textContent = DEAL && !hasIt(DEAL.g.id, DEAL.o)
+      ? CFG.testoOfferta + " " + DEAL.g.nome + " " + DEAL.o.nome + " (" + price(DEAL.g.id, DEAL.o) + ")." : "";
     document.getElementById("pts").textContent = pts;
     document.getElementById("lv").textContent = Math.min(lvl + 1, RIV.length);
     for (const u of UPS) {
