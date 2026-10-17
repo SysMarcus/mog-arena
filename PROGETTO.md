@@ -35,6 +35,8 @@ Meccaniche principali:
 - Prestigio a fine corso: si ricomincia con un bonus permanente di aura contro rivali più veloci.
 - Personaggio personalizzabile (pannello "Personaggio"): pelle, capelli, colore aura, occhiali, accessori
   in testa. Opzioni in `config.js` → `aspetto`, disegnate sul canvas da `game.js`.
+- Negozio nello stesso pannello: oggetti estetici a pagamento in mog points (`costo` in `config.js`),
+  offerta del giorno a metà prezzo, oggetti comprati conservati dopo il prestigio.
   Sono definiti in `config.js` (`potenziamenti`) e i pulsanti vengono generati da `game.js`.
 - Progressi (mog points, potenziamenti, livello, record) salvati nel `localStorage` del browser
   sotto la chiave `mogArenaSave`, con pulsante "Azzera progressi".
@@ -84,3 +86,4 @@ Meccaniche principali:
 | 2026-10-17 | Salvataggio progressi, potenziamenti definiti in `config.js`, limite di 15 clic al secondo |
 | 2026-10-17 | Nuovi potenziamenti Riflessi e Carisma, prestigio a fine corso |
 | 2026-10-17 | Personaggio personalizzabile con anteprima: pelle, capelli, aura, occhiali, accessori |
+| 2026-10-17 | Negozio: oggetti estetici in mog points, offerta del giorno, nuovi oggetti (visore, corona) |

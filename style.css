@@ -65,6 +65,14 @@ button.primary { font-size: 16px; font-weight: 500; padding: 10px 22px; backgrou
 .lookrow > div { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
 .lookrow button { padding: 4px 10px; font-size: 13px; }
 .lookrow button.sw { width: 30px; height: 30px; padding: 0; border-radius: 50%; }
+.shopinfo { margin: 8px 0 0; color: var(--text-2); }
+.shopinfo b { color: var(--text); font-weight: 500; }
+.lookrow button { position: relative; }
+.lookrow button.locked:not(.sw) { color: var(--text-2); border-style: dashed; }
+.lookrow button.sw.locked { opacity: .55; }
+.lookrow button.sw.locked::after { content: attr(data-cost); position: absolute; left: 50%; bottom: -16px; transform: translateX(-50%); font-size: 10px; color: var(--text-2); white-space: nowrap; }
+.lookrow:has(.sw.locked) > div { margin-bottom: 14px; }
+.lookrow button.deal { border-color: #EF9F27; }
 .lookrow button[aria-pressed="true"] { outline: 2px solid var(--accent); outline-offset: 2px; }
 kbd { border: 1px solid var(--border); border-radius: 4px; padding: 0 5px; font-size: 12px; }
 button.link { background: none; border: none; padding: 0 0 0 4px; font-size: 12px; color: var(--accent); text-decoration: underline; }
