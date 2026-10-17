@@ -29,6 +29,8 @@
   window.addEventListener("resize", resize);
 
   // ---------- Stato ----------
+  // Preferenze: effetti sonori, musica, riduci effetti (rispetta l'impostazione del sistema)
+  let opt = { snd: true, mus: true, calm: !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) };
   let S = freshStats(), look = freshLook(), owned = new Set(), pts = 0, lvl = 0, prestige = 0, phase = "menu", clicks = [];
   let pA = 0, rA = 0, t = 0, shake = 0, flash = 0;
   let parts = [], txts = [], cracks = [], codeRain = [];
@@ -79,13 +81,15 @@
         for (const { g, o } of PAID) if (lk[g.id] === o.id) owned.add(okey(g.id, o.id));
       }
       for (const g of LOOKS) { const o = g.opzioni.find((x) => x.id === lk[g.id]); if (o && hasIt(g.id, o)) look[g.id] = o.id; }
+      const op = d.opt && typeof d.opt === "object" ? d.opt : {};
+      for (const k of Object.keys(opt)) if (typeof op[k] === "boolean") opt[k] = op[k];
       return;
     }
     // Primo avvio con il nuovo salvataggio: recupera il vecchio record
     try { best = intIn(parseInt(localStorage.getItem("mogArenaBest") || "0", 10), 0, RIV.length, 0); } catch (e) {}
   }
   function save() {
-    try { localStorage.setItem(SAVE_KEY, JSON.stringify({ v: SAVE_V, pts, lvl, best, prestige, stats: S, look, owned: [...owned] })); } catch (e) {}
+    try { localStorage.setItem(SAVE_KEY, JSON.stringify({ v: SAVE_V, pts, lvl, best, prestige, stats: S, look, owned: [...owned], opt })); } catch (e) {}
   }
   function saveBest() { if (lvl > best) best = lvl; save(); }
   function resetAll() {
@@ -101,6 +105,7 @@
   // ---------- Audio (generato dal browser) ----------
   let AC = null;
   function snd(f, d, type, v) {
+    if (!opt.snd) return;
     try {
       AC = AC || new (window.AudioContext || window.webkitAudioContext)();
       const o = AC.createOscillator(), g = AC.createGain();
@@ -112,6 +117,79 @@
       o.connect(g).connect(AC.destination);
       o.start(); o.stop(AC.currentTime + d);
     } catch (e) {}
+  }
+
+  // ---------- Musica (generata dal browser, solo durante le sfide) ----------
+  // Giro di basso e arpeggio in minore; accelera quando la sfida si fa tesa.
+  const MUS = { bpm: 108, bass: [45, 45, 48, 43], arp: [0, 3, 7, 10, 12, 10, 7, 3] };
+  let musT = 0, musStep = 0;
+  const midi = (n) => 440 * Math.pow(2, (n - 69) / 12);
+  function note(f, at, d, type, v) {
+    const o = AC.createOscillator(), g = AC.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, at);
+    g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(v, at + .01);
+    g.gain.exponentialRampToValueAtTime(.0001, at + d);
+    o.connect(g).connect(AC.destination); o.start(at); o.stop(at + d + .02);
+  }
+  function music(tension) {
+    if (!AC || !opt.mus || phase !== "fight") { musT = 0; return; }
+    try {
+      const step = 60 / (MUS.bpm * (1 + tension * .35)) / 2;
+      if (musT < AC.currentTime) musT = AC.currentTime + .05;
+      while (musT < AC.currentTime + .2) {
+        const s = musStep % 8, root = MUS.bass[Math.floor(musStep / 8) % 4];
+        if (s % 4 === 0) note(midi(root), musT, step * 3.5, "triangle", .07);
+        note(midi(root + 24 + MUS.arp[s]), musT, step * .8, "square", .012 + tension * .018);
+        musStep++; musT += step;
+      }
+    } catch (e) {}
+  }
+
+  // ---------- Sfondi dei rivali (config.js → rivali → sfondo) ----------
+  // Disegni tenui dietro ai personaggi, nel colore del rivale
+  function backdrop(id, col) {
+    c.save(); c.globalAlpha = .16; c.fillStyle = col; c.strokeStyle = col; c.lineWidth = 2;
+    if (id === "aula") {
+      c.fillStyle = "#1D3B2E"; c.globalAlpha = .55; c.fillRect(W * .3, H * .06, W * .4, H * .3);
+      c.globalAlpha = .25; c.strokeStyle = "#F1EFE8"; c.font = "16px monospace"; c.textAlign = "left"; c.fillStyle = "#F1EFE8";
+      c.fillText("ping 127.0.0.1", W * .33, H * .16); c.fillText("ls -la", W * .33, H * .23); c.fillText("whoami", W * .33, H * .3);
+      c.globalAlpha = .18; c.fillStyle = col; for (let i = 0; i < 4; i++) c.fillRect(W * (.05 + i * .25), H * .88, W * .18, 6);
+    } else if (id === "laboratorio") {
+      for (let i = 0; i < 6; i++) {
+        const x = W * (.04 + i * .16), y = H * .74;
+        c.fillRect(x, y, W * .11, H * .1); c.fillRect(x + W * .05, y + H * .1, W * .01, H * .04);
+        c.globalAlpha = .1 + (Math.sin(t * 3 + i) + 1) * .06; c.fillStyle = "#F1EFE8"; c.fillRect(x + 4, y + 4, W * .11 - 8, H * .1 - 8);
+        c.globalAlpha = .16; c.fillStyle = col;
+      }
+    } else if (id === "rete") {
+      const N = [[.08, .2], [.22, .1], [.4, .25], [.6, .12], [.8, .22], [.93, .1], [.12, .85], [.5, .9], [.88, .85]];
+      c.beginPath();
+      for (let i = 0; i < N.length; i++) for (let j = i + 1; j < N.length; j++) if (Math.abs(N[i][0] - N[j][0]) < .25) { c.moveTo(N[i][0] * W, N[i][1] * H); c.lineTo(N[j][0] * W, N[j][1] * H); }
+      c.stroke();
+      for (let i = 0; i < N.length; i++) { c.globalAlpha = .2 + (Math.sin(t * 4 + i * 2) + 1) * .12; c.beginPath(); c.arc(N[i][0] * W, N[i][1] * H, 6, 0, 6.3); c.fill(); }
+    } else if (id === "kanban") {
+      const cols = ["TODO", "DOING", "DONE"];
+      c.font = "12px monospace"; c.textAlign = "center";
+      for (let k = 0; k < 3; k++) {
+        const x = W * (.3 + k * .14); c.globalAlpha = .3; c.fillText(cols[k], x + W * .05, H * .09);
+        for (let n = 0; n < 4 - k; n++) { c.globalAlpha = .14; c.fillStyle = ["#FAC775", "#9FE1CB", "#F0997B"][(k + n) % 3]; c.fillRect(x, H * (.12 + n * .07), W * .1, H * .055); }
+        c.fillStyle = col;
+      }
+    } else if (id === "server") {
+      for (const x of [W * .02, W * .9]) {
+        c.globalAlpha = .22; c.fillStyle = "#2C2C2A"; c.fillRect(x, H * .08, W * .08, H * .84);
+        for (let r = 0; r < 12; r++) {
+          c.globalAlpha = .5; c.fillStyle = (Math.floor(t * 6 + r * 7 + x) % 5) ? col : "#5DCAA5";
+          c.fillRect(x + W * .012, H * (.1 + r * .068), 4, 4); c.fillRect(x + W * .03, H * (.1 + r * .068), 4, 4);
+        }
+      }
+    } else if (id === "palco") {
+      const g = c.createRadialGradient(W * .75, -H * .1, 10, W * .75, H * .5, H * .9);
+      g.addColorStop(0, col); g.addColorStop(1, "rgba(0,0,0,0)");
+      c.globalAlpha = .28; c.fillStyle = g; c.fillRect(0, 0, W, H);
+      c.globalAlpha = .2; c.fillStyle = col; c.fillRect(0, H * .9, W, H * .1);
+    }
+    c.restore();
   }
 
   // ---------- Effetti ----------
@@ -314,6 +392,7 @@
     document.getElementById("lookopts").appendChild(row);
   }
 
+  let optBtns = [];
   const shopMsg = document.getElementById("shopmsg");
   function buyOrWear(g, o) {
     if (!hasIt(g.id, o)) {
@@ -346,6 +425,7 @@
       else btn.textContent = o.nome + (locked ? " · " + p : "");
     }
     document.getElementById("pts2").textContent = pts;
+    for (const [k, b] of optBtns) b.setAttribute("aria-pressed", opt[k] ? "true" : "false");
     document.getElementById("deal").textContent = DEAL && !hasIt(DEAL.g.id, DEAL.o)
       ? CFG.testoOfferta + " " + DEAL.g.nome + " " + DEAL.o.nome + " (" + price(DEAL.g.id, DEAL.o) + ")." : "";
     document.getElementById("pts").textContent = pts;
@@ -389,6 +469,15 @@
     }
     if (phase === "fight" && qte && !mentor && e.key.toUpperCase() === qte.k) qteHit();
   });
+  // Interruttori: effetti sonori, musica, riduci effetti
+  optBtns = [["snd", "suono"], ["mus", "musica"], ["calm", "calma"]].map(([k, label]) => {
+    const b = document.createElement("button");
+    b.textContent = CFG.testiOpzioni[label];
+    b.onclick = () => { opt[k] = !opt[k]; save(); ui(); };
+    document.getElementById("opts").appendChild(b);
+    return [k, b];
+  });
+
   const resetBtn = document.getElementById("reset");
   resetBtn.textContent = CFG.testoAzzera;
   resetBtn.onclick = () => {
@@ -426,9 +515,11 @@
     }
     if (phase === "end") endT += dt;
     shake *= .88; flash *= .92;
+    if (opt.calm) { shake = 0; flash = 0; }
 
     c.save(); c.translate((Math.random() - .5) * shake, (Math.random() - .5) * shake);
     c.fillStyle = "#0a0a12"; c.fillRect(-20, -20, W + 40, H + 40);
+    if (phase !== "end" || !win || lvl < RIV.length) backdrop(R.sfondo, R.col);
 
     const tension = phase === "fight" ? Math.max(pA, rA) / 100 : 0;
     c.font = "12px monospace"; c.textAlign = "left";
@@ -442,7 +533,7 @@
     const px = W * .25, rx = W * .75, hy = H * .55;
     let ps = 1, rsc = 1;
     if (phase === "end") { const k = Math.min(1, endT * 2); if (win) { ps = 1 + k * .35; rsc = 1 - k * .45; } else { ps = 1 - k * .45; rsc = 1 + k * .35; } }
-    if (phase === "fight" && pA > 55 && rA > 55 && Math.random() < .5) lightning(px + 60, hy - 20, rx - 60, hy - 20, Math.random() < .5 ? "#5DCAA5" : R.col);
+    if (phase === "fight" && !opt.calm && pA > 55 && rA > 55 && Math.random() < .5) lightning(px + 60, hy - 20, rx - 60, hy - 20, Math.random() < .5 ? "#5DCAA5" : R.col);
 
     const m = Math.min(1, W / 680) * 1.05;
     const finale = phase === "end" && win && lvl >= RIV.length;
@@ -533,6 +624,7 @@
     }
     if (flash > .02) { c.fillStyle = "rgba(255,255,255," + flash + ")"; c.fillRect(0, 0, W, H); }
     drawPreview();
+    music(tension);
     requestAnimationFrame(loop);
   }
   requestAnimationFrame(loop);

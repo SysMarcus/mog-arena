@@ -55,6 +55,8 @@ button.primary { font-size: 16px; font-weight: 500; padding: 10px 22px; backgrou
 .up b { color: var(--text); font-weight: 500; }
 .up button { width: 100%; margin-top: auto; }
 .up .desc { margin-bottom: 8px; }
+.opts button { font-size: 13px; padding: 5px 12px; }
+.opts button[aria-pressed="true"] { background: var(--accent-bg); color: var(--accent); border-color: var(--accent); }
 .pips { letter-spacing: 2px; color: var(--accent); }
 .help { margin-top: 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 10px 16px; font-size: 14px; }
 .help summary { cursor: pointer; font-weight: 500; }
