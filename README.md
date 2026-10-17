@@ -10,7 +10,8 @@ Come si gioca
 Premi Spazio o tocca l'arena per caricare l'aura: chi arriva prima al 100% mogga l'altro.
 Quando compare una lettera nel cerchio dorato, premila (o tocca il cerchio da telefono) per lanciare un exploit.
 Una volta per sfida, se stai perdendo, arriva il Prof con un consiglio e +25 di aura.
-Con i mog points potenzi Mascella, Aura e Sguardo.
+Con i mog points potenzi Mascella, Aura, Sguardo, Riflessi e Carisma.
+Finito il corso, il prestigio ti fa ricominciare con un bonus permanente di aura, contro rivali più forti.
 Struttura del progetto
 File	Contenuto
 index.html	La pagina del gioco

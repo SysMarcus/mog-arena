@@ -18,12 +18,21 @@ window.MOG_CONFIG = {
   potenziamenti: [
     { id: "jaw",  nome: "Mascella", desc: "Aura passiva, come un cron job", max: 5, costoBase: 50, costoPasso: 60 },
     { id: "aura", nome: "Aura",     desc: "Più carica per ogni clic",       max: 5, costoBase: 50, costoPasso: 60 },
-    { id: "eyes", nome: "Sguardo",  desc: "Exploit rapidi più potenti",     max: 5, costoBase: 50, costoPasso: 60 }
+    { id: "eyes", nome: "Sguardo",  desc: "Exploit rapidi più potenti",     max: 5, costoBase: 50, costoPasso: 60 },
+    { id: "reflex", nome: "Riflessi", desc: "Più tempo per premere la lettera degli exploit", max: 5, costoBase: 60, costoPasso: 70 },
+    { id: "charm",  nome: "Carisma",  desc: "Più mog points a ogni vittoria",                 max: 5, costoBase: 80, costoPasso: 80 }
   ],
+
+  // Prestigio: a fine corso ricominci da capo con un bonus permanente.
+  // Ogni livello di prestigio dà bonusAura in più su tutta l'aura caricata
+  // (0.15 = +15%) e rende i rivali più veloci di rivaliPiuForti (0.10 = +10%).
+  prestigio: { bonusAura: 0.15, rivaliPiuForti: 0.10 },
+  testoPrestigio: "Prestigio: ricomincia più forte",
+  infoPrestigio: "Con il prestigio ricominci il corso con un bonus permanente, ma i rivali diventano più forti.",
 
   // Testi del salvataggio
   testoAzzera: "Azzera progressi",
-  confermaAzzera: "Vuoi cancellare mog points, potenziamenti e record? Non si può annullare.",
+  confermaAzzera: "Vuoi cancellare mog points, potenziamenti, prestigio e record? Non si può annullare.",
 
   // Lettere usate negli eventi rapidi (exploit)
   lettereExploit: "SCUOLA",
