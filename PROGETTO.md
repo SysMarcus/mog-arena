@@ -41,6 +41,8 @@ Meccaniche principali:
 - Testi separati dal motore (`config.js`) per poterli modificare senza toccare il codice.
 - Hosting: GitHub Pages (consigliato), Netlify come alternativa veloce.
 - Licenza consigliata: MIT.
+- Le feature future si documentano e si ragionano in `FEATURES.md` prima di implementarle,
+  una per volta, ognuna con branch e PR dedicati.
 
 ## Da decidere
 
@@ -48,12 +50,15 @@ Meccaniche principali:
       (`config.js` righe 8 e 12, `index.html` righe 6, 8 e 16, `game.js` riga 320).
 - [ ] Nome definitivo del gioco: "Mog Arena" o "Mogging Arena".
 - [ ] Repository su account GitHub personale o dedicato.
+- [ ] Ordine delle feature future e domande aperte: vedi `FEATURES.md`, sezione "Domande aperte riassunte".
 
 ## Roadmap
 
 1. **Pubblicazione** – GitHub Pages, README, licenza.
-2. **Rifiniture** – più rivali, suoni migliori, schermata di condivisione del risultato.
-3. **Multiplayer v1** – sfide 1 contro 1 con stanze tramite codice, usando Supabase Realtime.
+2. **Rifiniture ed evoluzione single player** – salvataggio progressi, potenziamenti estesi,
+   personaggio customizzabile, negozio, grafica, condivisione del risultato (dettagli in `FEATURES.md`).
+3. **Multiplayer v1** – sfide 1 contro 1 con stanze tramite codice, con server autoritativo
+   (Supabase o Cloudflare Durable Objects, da decidere: confronto in `FEATURES.md`).
 4. **Multiplayer v2** – matchmaking automatico con logica lato server, per impedire di barare
    modificando il JavaScript dal browser.
 
@@ -62,3 +67,4 @@ Meccaniche principali:
 | Data | Cosa |
 | --- | --- |
 | 2026-10-17 | Versione 1.0: gioco completo, file separati, guida alla pubblicazione |
+| 2026-10-17 | Aggiunto `FEATURES.md`: piano delle feature future con ordine consigliato e rischi di sicurezza |
