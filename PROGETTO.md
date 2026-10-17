@@ -31,7 +31,10 @@ Meccaniche principali:
 - Eventi rapidi (exploit): compare una lettera, va premuta entro 1,3 secondi.
 - Mentore: il Prof arriva una volta per sfida se il rivale è avanti di oltre 20 punti.
 - Potenziamenti con i mog points: Mascella (aura passiva), Aura (carica per clic), Sguardo (exploit più forti).
-- Record salvato nel `localStorage` del browser.
+  Sono definiti in `config.js` (`potenziamenti`) e i pulsanti vengono generati da `game.js`.
+- Progressi (mog points, potenziamenti, livello, record) salvati nel `localStorage` del browser
+  sotto la chiave `mogArenaSave`, con pulsante "Azzera progressi".
+- Massimo 15 cariche d'aura al secondo (`maxCaricheSecondo` in `config.js`): gli autoclicker non aiutano.
 
 ## Decisioni prese
 
@@ -43,6 +46,11 @@ Meccaniche principali:
 - Licenza consigliata: MIT.
 - Le feature future si documentano e si ragionano in `FEATURES.md` prima di implementarle,
   una per volta, ognuna con branch e PR dedicati.
+- Negozio solo con mog points, niente soldi veri.
+- Gioco onesto: vince chi clicca davvero più veloce. Limite di clic al secondo già in single player;
+  in multiplayer server autoritativo e potenziamenti esclusi.
+- Multiplayer rimandato; il nome del giocatore arriva insieme al multiplayer.
+- Prossimi potenziamenti: Riflessi, Carisma e prestigio.
 
 ## Da decidere
 
@@ -50,7 +58,8 @@ Meccaniche principali:
       (`config.js` righe 8 e 12, `index.html` righe 6, 8 e 16, `game.js` riga 320).
 - [ ] Nome definitivo del gioco: "Mog Arena" o "Mogging Arena".
 - [ ] Repository su account GitHub personale o dedicato.
-- [ ] Ordine delle feature future e domande aperte: vedi `FEATURES.md`, sezione "Domande aperte riassunte".
+- [ ] Se il prestigio sostituisce "Ricomincia il corso" (vedi `FEATURES.md`).
+- [ ] Servizio per il multiplayer: Cloudflare Durable Objects o Supabase.
 
 ## Roadmap
 
@@ -68,3 +77,4 @@ Meccaniche principali:
 | --- | --- |
 | 2026-10-17 | Versione 1.0: gioco completo, file separati, guida alla pubblicazione |
 | 2026-10-17 | Aggiunto `FEATURES.md`: piano delle feature future con ordine consigliato e rischi di sicurezza |
+| 2026-10-17 | Salvataggio progressi, potenziamenti definiti in `config.js`, limite di 15 clic al secondo |

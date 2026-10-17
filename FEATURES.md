@@ -51,7 +51,7 @@ Dalla 7 in poi serve un servizio esterno.
 
 ## 0. Salvataggio progressi
 
-**Stato:** idea · **Dimensione:** S · **Dipende da:** niente
+**Stato:** fatta · **Dimensione:** S · **Dipende da:** niente
 
 **Cosa:** mog points, potenziamenti, livello raggiunto e (in futuro) oggetti posseduti restano
 salvati nel browser tra una visita e l'altra.
@@ -74,7 +74,7 @@ salvati nel browser tra una visita e l'altra.
 
 ## 1. Catalogo in config.js
 
-**Stato:** idea · **Dimensione:** S · **Dipende da:** niente
+**Stato:** fatta (per ora solo i potenziamenti; gli oggetti arrivano con le feature 3 e 4) · **Dimensione:** S · **Dipende da:** niente
 
 **Cosa:** un elenco in `config.js` che descrive potenziamenti e oggetti come dati
 (nome, descrizione, costo, livello massimo, effetto). `game.js` li legge e genera da solo i pulsanti,
@@ -102,7 +102,9 @@ invece di averli scritti a mano in `index.html`.
 
 ## 2. Potenziamenti estesi
 
-**Stato:** da decidere · **Dimensione:** M · **Dipende da:** 0, 1
+**Stato:** pronta · **Dimensione:** M · **Dipende da:** 0, 1
+
+**Deciso:** si parte da due nuove statistiche, **Riflessi** e **Carisma**, più il **prestigio**.
 
 **Cosa:** più modi di crescere oltre Mascella, Aura e Sguardo.
 
@@ -118,8 +120,8 @@ l'effetto in base all'`id`. Il bilanciamento (costi e forza) va provato giocando
 i numeri in `config.js` per ritoccarli senza toccare la logica.
 
 **Domande aperte:**
-- Quali di queste idee ti piacciono? Consiglio di partire da 2 nuove statistiche e il prestigio.
-- Il prestigio sostituisce il "Ricomincia il corso" attuale, che azzera tutto?
+- Il prestigio sostituisce il "Ricomincia il corso" attuale, che azzera tutto? Proposta: sì,
+  ricominci con un bonus permanente invece di perdere tutto.
 
 ---
 
@@ -145,8 +147,7 @@ loghi o personaggi protetti.
 e disegnato sul canvas o inserito con `textContent`. In multiplayer il nome dell'avversario
 è input non fidato: va ricontrollato sul server e filtrato contro insulti.
 
-**Domande aperte:**
-- Il nome del giocatore lo vuoi già ora o solo con il multiplayer?
+**Deciso:** il nome del giocatore arriva solo con il multiplayer (feature 7).
 
 ---
 
@@ -169,9 +170,7 @@ Se in futuro gli oggetti comparissero in multiplayer, **l'elenco degli oggetti p
 server**, altrimenti chiunque si "regala" tutto. Per questo consiglio che in multiplayer gli oggetti
 siano solo estetici (vedi feature 7).
 
-**Domande aperte:**
-- Solo valuta di gioco (mog points), senza soldi veri? Consiglio di sì: i pagamenti portano obblighi
-  legali, fiscali e di sicurezza sproporzionati per questo progetto.
+**Deciso:** solo mog points, niente soldi veri.
 
 ---
 
@@ -213,7 +212,11 @@ finché resta "un vanto" e non una classifica.
 
 ## 7. Multiplayer v1: sfide tra amici
 
-**Stato:** da decidere · **Dimensione:** L · **Dipende da:** 0, 3 (aspetto del personaggio); stabilità del single player
+**Stato:** rimandata · **Dimensione:** L · **Dipende da:** 0, 3 (aspetto del personaggio); stabilità del single player
+
+**Deciso:** il multiplayer aspetta. Quando arriverà deve essere un gioco onesto: vince chi clicca
+davvero più veloce, quindi server autoritativo, limite di clic al secondo e potenziamenti esclusi
+(conta solo l'aspetto). Il servizio esterno è ancora da scegliere.
 
 **Cosa:** due giocatori si sfidano in tempo reale. Uno crea una stanza e ottiene un codice,
 l'altro lo inserisce. Vince chi arriva prima al 100% di aura.
@@ -262,8 +265,7 @@ multiplayer usa il servizio. Va comunque deciso insieme: è il primo servizio es
   al secondo e il client "anima" tra un aggiornamento e l'altro.
 
 **Domande aperte:**
-- Va bene che in multiplayer i potenziamenti non contino (solo aspetto)? È la scelta che consiglio.
-- Va bene introdurre un servizio esterno (Cloudflare o Supabase), con un account a tuo nome?
+- Quale servizio esterno (Cloudflare o Supabase), con un account a tuo nome?
 
 ---
 
@@ -287,11 +289,23 @@ classifica globale; eventualmente account.
 
 ---
 
+## Gioco onesto anche in single player
+
+Il limite di clic vale già oggi: `config.js` → `maxCaricheSecondo` (15). Le cariche oltre questo
+numero in un secondo vengono ignorate, così un autoclicker o uno script che simula la barra
+spaziatrice non dà vantaggio. Un umano molto veloce arriva a 10–14 clic al secondo.
+In single player resta aggirabile modificando il codice dalla console; la protezione vera,
+per il multiplayer, sarà sul server.
+
 ## Domande aperte riassunte
 
-1. Le feature 0 e 1 (salvataggio e catalogo) sono la base consigliata: partiamo da lì?
-2. Negozio solo con mog points, niente soldi veri?
-3. In multiplayer potenziamenti esclusi, solo aspetto?
-4. Quali potenziamenti nuovi ti piacciono (feature 2)?
-5. Nome del giocatore subito o solo col multiplayer?
-6. Per il multiplayer, ok a un servizio esterno (consiglio Cloudflare Durable Objects)?
+1. Il prestigio sostituisce "Ricomincia il corso"? (proposta: sì)
+2. Quale servizio per il multiplayer, quando arriverà (Cloudflare Durable Objects o Supabase)?
+
+## Decisioni del 2026-10-17
+
+- Si segue l'ordine consigliato; fatte le feature 0 e 1.
+- Negozio solo con mog points.
+- Multiplayer rimandato; quando arriva, gioco onesto: vince il più veloce, potenziamenti esclusi.
+- Nuovi potenziamenti: Riflessi, Carisma e prestigio.
+- Nome del giocatore solo con il multiplayer.
