@@ -211,13 +211,17 @@ da gestire. Se un giorno servissero immagini, meglio SVG originali nel repo che 
 
 ## 6. Condivisione del risultato
 
-**Stato:** idea · **Dimensione:** S · **Dipende da:** niente
+**Stato:** fatta · **Dimensione:** S · **Dipende da:** niente
 
 **Cosa:** a fine corso (o dopo una vittoria) un pulsante "Condividi" con il risultato:
 testo tipo "Ho moggato 6/6 studenti in Mog Arena" + link, oppure un'immagine del canvas.
 
 **Come:** `navigator.share()` sui telefoni, copia negli appunti sui computer; per l'immagine
 `canvas.toBlob()`. Nessun servizio esterno.
+
+**Fatto:** dopo ogni vittoria compare il pulsante "Condividi". Sul telefono apre la condivisione di sistema
+con testo, link e, se il browser lo permette, l'immagine dell'arena; sul computer copia testo e link negli
+appunti. Il messaggio si cambia in `config.js` (`messaggioCondivisione`).
 
 **Sicurezza:** il risultato condiviso è dichiarato dal giocatore, quindi falsificabile. Va bene
 finché resta "un vanto" e non una classifica.

@@ -439,6 +439,7 @@
     const big = document.getElementById("big");
     if (phase === "end") big.textContent = lvl >= RIV.length && win ? CFG.testoPrestigio : win ? "Prossimo studente" : "Riprova";
     else if (phase === "menu") big.textContent = lvl >= RIV.length ? CFG.testoPrestigio : "Inizia la sfida";
+    document.getElementById("share").hidden = !(phase === "end" && win);
     document.getElementById("pr").textContent = prestige;
     document.getElementById("prw").hidden = prestige === 0;
     const rec = best > 0 ? " Record: " + best + "/" + RIV.length + "." : "";
@@ -469,6 +470,31 @@
     }
     if (phase === "fight" && qte && !mentor && e.key.toUpperCase() === qte.k) qteHit();
   });
+  // ---------- Condivisione del risultato ----------
+  // Testo + link al gioco; sul telefono anche l'immagine dell'arena, se il browser lo permette.
+  // Il risultato è dichiarato dal giocatore: è un vanto, non una classifica.
+  const shareBtn = document.getElementById("share");
+  shareBtn.textContent = CFG.testoCondividi;
+  shareBtn.onclick = async () => {
+    const url = location.origin + location.pathname;
+    const text = CFG.messaggioCondivisione.replace("{n}", lvl).replace("{tot}", RIV.length)
+      .replace("{prestigio}", prestige ? CFG.testoPrestigioCondivisione.replace("{p}", prestige) : "");
+    try {
+      if (navigator.share) {
+        const data = { title: "Mog Arena", text, url };
+        const blob = await new Promise((r) => cv.toBlob(r, "image/png"));
+        if (blob && navigator.canShare) {
+          const f = new File([blob], "mog-arena.png", { type: "image/png" });
+          if (navigator.canShare({ files: [f] })) data.files = [f];
+        }
+        await navigator.share(data);
+      } else {
+        await navigator.clipboard.writeText(text + " " + url);
+        document.getElementById("info").textContent = CFG.testoCopiato;
+      }
+    } catch (e) {} // condivisione annullata o non permessa: niente da fare
+  };
+
   // Interruttori: effetti sonori, musica, riduci effetti
   optBtns = [["snd", "suono"], ["mus", "musica"], ["calm", "calma"]].map(([k, label]) => {
     const b = document.createElement("button");

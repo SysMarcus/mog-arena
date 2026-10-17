@@ -39,6 +39,7 @@ Meccaniche principali:
   offerta del giorno a metà prezzo, oggetti comprati conservati dopo il prestigio.
 - Sfondo diverso per ogni rivale, musica generata dal browser, interruttori per effetti sonori, musica
   e "riduci effetti" (accessibilità).
+- Pulsante "Condividi" dopo ogni vittoria: condivisione di sistema sul telefono, copia negli appunti sul computer.
   Sono definiti in `config.js` (`potenziamenti`) e i pulsanti vengono generati da `game.js`.
 - Progressi (mog points, potenziamenti, livello, record) salvati nel `localStorage` del browser
   sotto la chiave `mogArenaSave`, con pulsante "Azzera progressi".
@@ -90,3 +91,4 @@ Meccaniche principali:
 | 2026-10-17 | Personaggio personalizzabile con anteprima: pelle, capelli, aura, occhiali, accessori |
 | 2026-10-17 | Negozio: oggetti estetici in mog points, offerta del giorno, nuovi oggetti (visore, corona) |
 | 2026-10-17 | Sfondi per rivale, musica durante le sfide, interruttori suono/musica/riduci effetti |
+| 2026-10-17 | Pulsante Condividi dopo la vittoria (testo, link e immagine dell'arena) |
