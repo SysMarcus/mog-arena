@@ -181,7 +181,16 @@ I potenziamenti restano nella loro riga sotto l'arena.
 
 ## 5. Grafica e audio
 
-**Stato:** idea · **Dimensione:** M (a pezzi da S) · **Dipende da:** niente
+**Stato:** in parte fatta · **Dimensione:** M (a pezzi da S) · **Dipende da:** niente
+
+**Fatto:**
+- Uno sfondo per ogni rivale (aula, laboratorio, rete, kanban, sala server, palco), disegnato sul canvas
+  nel colore del rivale; si sceglie in `config.js` → `rivali` → `sfondo`.
+- Musica generata dalla Web Audio API durante le sfide, che accelera quando la sfida si fa tesa.
+- Interruttori sotto l'arena: effetti sonori, musica, riduci effetti (niente scosse, lampi e fulmini).
+  "Riduci effetti" parte già attivo se il sistema chiede movimenti ridotti. Le scelte restano salvate.
+
+**Restano da fare:** animazioni di entrata e vittoria più ricche, nuovi rivali (testi da scrivere insieme).
 
 **Idee:**
 - **Sfondi per rivale**: ogni rivale con la sua "aula" (laboratorio, sala server, terminale) disegnata sul canvas.
