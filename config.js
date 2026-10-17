@@ -78,6 +78,13 @@ window.MOG_CONFIG = {
   testoServono: "Ti servono altri mog points:",
   testoComprato: "Comprato:",
 
+  // Condivisione del risultato. Segnaposto: {n} studenti battuti, {tot} totale,
+  // {prestigio} testo del prestigio (vuoto se 0). Il link al gioco viene aggiunto da solo.
+  testoCondividi: "Condividi",
+  messaggioCondivisione: "Ho moggato {n}/{tot} studenti in Mog Arena{prestigio}. Riesci a fare meglio?",
+  testoPrestigioCondivisione: " (prestigio {p})",
+  testoCopiato: "Risultato copiato: incollalo dove vuoi.",
+
   // Testi del salvataggio
   testoAzzera: "Azzera progressi",
   confermaAzzera: "Vuoi cancellare mog points, potenziamenti, oggetti comprati, prestigio e record? Non si può annullare.",
