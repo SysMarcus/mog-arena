@@ -11,6 +11,7 @@
   const LETTERS = CFG.lettereExploit;
   const UPS = CFG.potenziamenti;
   const MAX_CPS = CFG.maxCaricheSecondo || 15;
+  const PRE = CFG.prestigio;
   const CH = "01$#>_{}[];/";
 
   // ---------- Canvas ----------
@@ -27,7 +28,7 @@
   window.addEventListener("resize", resize);
 
   // ---------- Stato ----------
-  let S = freshStats(), pts = 0, lvl = 0, phase = "menu", clicks = [];
+  let S = freshStats(), pts = 0, lvl = 0, prestige = 0, phase = "menu", clicks = [];
   let pA = 0, rA = 0, t = 0, shake = 0, flash = 0;
   let parts = [], txts = [], cracks = [], codeRain = [];
   let qte = null, qteT = 2.5, endT = 0, win = false, combo = 0;
@@ -51,6 +52,7 @@
       pts = intIn(d.pts, 0, 1e9, 0);
       lvl = intIn(d.lvl, 0, RIV.length, 0);
       best = intIn(d.best, 0, RIV.length, 0);
+      prestige = intIn(d.prestige, 0, 999, 0);
       const st = d.stats && typeof d.stats === "object" ? d.stats : {};
       for (const u of UPS) S[u.id] = intIn(st[u.id], 0, u.max, 0);
       return;
@@ -59,14 +61,18 @@
     try { best = intIn(parseInt(localStorage.getItem("mogArenaBest") || "0", 10), 0, RIV.length, 0); } catch (e) {}
   }
   function save() {
-    try { localStorage.setItem(SAVE_KEY, JSON.stringify({ v: SAVE_V, pts, lvl, best, stats: S })); } catch (e) {}
+    try { localStorage.setItem(SAVE_KEY, JSON.stringify({ v: SAVE_V, pts, lvl, best, prestige, stats: S })); } catch (e) {}
   }
   function saveBest() { if (lvl > best) best = lvl; save(); }
   function resetAll() {
-    S = freshStats(); pts = 0; lvl = 0; best = 0;
+    S = freshStats(); pts = 0; lvl = 0; best = 0; prestige = 0;
     try { localStorage.removeItem(SAVE_KEY); localStorage.removeItem("mogArenaBest"); } catch (e) {}
   }
   load();
+
+  // Moltiplicatori del prestigio: più aura per te, rivali più veloci
+  function auraMul() { return 1 + prestige * PRE.bonusAura; }
+  function rivalMul() { return 1 + prestige * PRE.rivaliPiuForti; }
 
   // ---------- Audio (generato dal browser) ----------
   let AC = null;
@@ -175,7 +181,7 @@
 
   function charge() {
     if (phase !== "fight" || tooFast()) return;
-    pA = Math.min(100, pA + 2.1 * (1 + S.aura * .3)); combo++;
+    pA = Math.min(100, pA + 2.1 * (1 + S.aura * .3) * auraMul()); combo++;
     shake = Math.max(shake, 1.5); burst(W * .25, H * .55, 4, "#5DCAA5", 4); snd(220 + pA * 4, .08, "square", .04);
     if (combo % 15 === 0) { popText(W * .25, H * .3, "sudo combo x" + combo, "#FAC775"); pA = Math.min(100, pA + 5); }
   }
@@ -198,7 +204,7 @@
   function finish(w) {
     phase = "end"; win = w; endT = 0; shake = 18; flash = 1; bubble = null; mentor = null;
     if (w) {
-      const g = 40 + lvl * 35; pts += g;
+      const g = Math.round((40 + lvl * 35) * (1 + S.charm * .1)); pts += g;
       popText(W / 2, H * .78, "+" + g + " mog points", "#FAC775");
       for (let i = 0; i < 6; i++) burst(W * .75, H * .5, 30, ["#EF9F27", "#5DCAA5", "#7F77DD", "#F0997B"][i % 4], 10);
       snd(80, 1.2, "sawtooth", .25); snd(660, .6, "triangle", .1);
@@ -226,7 +232,9 @@
       const cost = cst(u);
       if (S[u.id] < u.max && pts >= cost) { pts -= cost; S[u.id]++; save(); snd(520, .2, "triangle", .1); ui(); }
     };
-    box.append(b, " ", pips, document.createElement("br"), u.desc, btn);
+    const top = document.createElement("div"), desc = document.createElement("div");
+    top.append(b, " ", pips); desc.className = "desc"; desc.textContent = u.desc;
+    box.append(top, desc, btn);
     document.getElementById("ups").appendChild(box);
     upEls[u.id] = { pips, btn };
   }
@@ -241,10 +249,13 @@
       e.btn.style.opacity = (!full && pts >= cst(u)) ? 1 : .5;
     }
     const big = document.getElementById("big");
-    if (phase === "end") big.textContent = lvl >= RIV.length && win ? "Ricomincia il corso" : win ? "Prossimo studente" : "Riprova";
+    if (phase === "end") big.textContent = lvl >= RIV.length && win ? CFG.testoPrestigio : win ? "Prossimo studente" : "Riprova";
+    else if (phase === "menu") big.textContent = lvl >= RIV.length ? CFG.testoPrestigio : "Inizia la sfida";
+    document.getElementById("pr").textContent = prestige;
+    document.getElementById("prw").hidden = prestige === 0;
     const rec = best > 0 ? " Record: " + best + "/" + RIV.length + "." : "";
     document.getElementById("info").textContent = phase === "end"
-      ? (win ? (lvl >= RIV.length ? "Corso completato. Grazie, prof." : "Studente moggato. Spendi i mog points nei potenziamenti.") : "Sei stato moggato. Potenzia le statistiche e riprova.") + rec
+      ? (win ? (lvl >= RIV.length ? "Corso completato. Grazie, prof. " + CFG.infoPrestigio : "Studente moggato. Spendi i mog points nei potenziamenti.") : "Sei stato moggato. Potenzia le statistiche e riprova.") + rec
       : "Spazio o tocco per caricare l'aura. Se sei in difficoltà, arriva il Prof." + rec;
   }
 
@@ -259,7 +270,7 @@
   });
   document.getElementById("big").onclick = () => {
     if (phase === "fight") charge();
-    else { if (lvl >= RIV.length) { lvl = 0; S = freshStats(); pts = 0; save(); } startFight(); }
+    else { if (lvl >= RIV.length) { prestige++; lvl = 0; S = freshStats(); pts = 0; save(); } startFight(); }
   };
   window.addEventListener("keydown", (e) => {
     if (e.code === "Space") {
@@ -274,8 +285,7 @@
   resetBtn.textContent = CFG.testoAzzera;
   resetBtn.onclick = () => {
     if (phase === "fight" || !confirm(CFG.confermaAzzera)) return;
-    resetAll(); phase = "menu"; win = false;
-    document.getElementById("big").textContent = "Inizia la sfida"; ui();
+    resetAll(); phase = "menu"; win = false; ui();
   };
   ui();
 
@@ -287,10 +297,10 @@
 
     if (phase === "fight") {
       fightT += dt;
-      pA = Math.min(100, pA + S.jaw * 1.4 * dt);
-      rA = Math.min(100, rA + R.r * 60 * dt * (.8 + Math.sin(t * 2) * .3));
+      pA = Math.min(100, pA + S.jaw * 1.4 * dt * auraMul());
+      rA = Math.min(100, rA + R.r * 60 * dt * (.8 + Math.sin(t * 2) * .3) * rivalMul());
       qteT -= dt;
-      if (!qte && !mentor && qteT <= 0) { qte = { k: LETTERS[Math.floor(Math.random() * LETTERS.length)], dt: 0, life: 1.3 }; snd(990, .1, "square", .06); }
+      if (!qte && !mentor && qteT <= 0) { qte = { k: LETTERS[Math.floor(Math.random() * LETTERS.length)], dt: 0, life: 1.3 + S.reflex * .15 }; snd(990, .1, "square", .06); }
       if (qte) { qte.dt += dt; if (qte.dt > qte.life) { qte = null; qteT = 2 + Math.random() * 2; rA = Math.min(100, rA + 6); popText(W * .75, H * .25, "Exploit fallito", "#F09595"); } }
       tauntT -= dt;
       if (tauntT <= 0 && !mentor) { bubble = { s: R.tt[Math.floor(Math.random() * R.tt.length)], l: 2.2 }; tauntT = 3.5 + Math.random() * 2; snd(300, .15, "triangle", .05); }

@@ -102,26 +102,17 @@ invece di averli scritti a mano in `index.html`.
 
 ## 2. Potenziamenti estesi
 
-**Stato:** pronta · **Dimensione:** M · **Dipende da:** 0, 1
+**Stato:** fatta · **Dimensione:** M · **Dipende da:** 0, 1
 
-**Deciso:** si parte da due nuove statistiche, **Riflessi** e **Carisma**, più il **prestigio**.
+**Fatto:**
+- **Riflessi**: ogni livello allunga di 0,15 s il tempo per premere la lettera dell'exploit (da 1,3 s fino a 2,05 s).
+- **Carisma**: ogni livello dà +10% di mog points a ogni vittoria (fino a +50%).
+- **Prestigio**: a fine corso il pulsante "Ricomincia il corso" diventa "Prestigio". Si riparte dal primo
+  studente con punti e potenziamenti azzerati, ma ogni livello di prestigio dà +15% su tutta l'aura caricata
+  e rende i rivali più veloci del 10%. Il record e il prestigio restano.
+- Numeri regolabili in `config.js` (`potenziamenti` e `prestigio`).
 
-**Cosa:** più modi di crescere oltre Mascella, Aura e Sguardo.
-
-**Idee da valutare:**
-- **Nuove statistiche**: "Firewall" (il rivale carica più lentamente), "Riflessi" (gli exploit durano
-  più di 1,3 s), "Carisma" (più mog points per vittoria).
-- **Abilità attive** con ricarica, su un tasto: per esempio "DDoS" che blocca la carica del rivale per 2 secondi.
-- **Consumabili** da usare in una sola sfida (un aiuto extra del Prof, uno scudo).
-- **Prestigio**: dopo aver finito il corso si ricomincia con un bonus permanente e rivali più forti.
-
-**Come:** ogni potenziamento è una voce del catalogo (feature 1); in `game.js` una funzione applica
-l'effetto in base all'`id`. Il bilanciamento (costi e forza) va provato giocando: conviene tenere
-i numeri in `config.js` per ritoccarli senza toccare la logica.
-
-**Domande aperte:**
-- Il prestigio sostituisce il "Ricomincia il corso" attuale, che azzera tutto? Proposta: sì,
-  ricominci con un bonus permanente invece di perdere tutto.
+**Idee rimaste per dopo:** Firewall (rivale più lento), abilità attive con ricarica, consumabili.
 
 ---
 
@@ -299,8 +290,7 @@ per il multiplayer, sarà sul server.
 
 ## Domande aperte riassunte
 
-1. Il prestigio sostituisce "Ricomincia il corso"? (proposta: sì)
-2. Quale servizio per il multiplayer, quando arriverà (Cloudflare Durable Objects o Supabase)?
+1. Quale servizio per il multiplayer, quando arriverà (Cloudflare Durable Objects o Supabase)?
 
 ## Decisioni del 2026-10-17
 
@@ -309,3 +299,4 @@ per il multiplayer, sarà sul server.
 - Multiplayer rimandato; quando arriva, gioco onesto: vince il più veloce, potenziamenti esclusi.
 - Nuovi potenziamenti: Riflessi, Carisma e prestigio.
 - Nome del giocatore solo con il multiplayer.
+- Il prestigio sostituisce "Ricomincia il corso" (scelta proposta, applicata in attesa di conferma).

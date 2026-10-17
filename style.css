@@ -50,9 +50,11 @@ button {
 button:hover { background: var(--surface-1); }
 button:active { transform: scale(.97); }
 button.primary { font-size: 16px; font-weight: 500; padding: 10px 22px; background: var(--accent-bg); color: var(--accent); border-color: var(--accent); }
-.up { flex: 1; min-width: 180px; background: var(--surface-1); border-radius: var(--radius); padding: 10px 12px; }
+.upgrades { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); align-items: stretch; }
+.up { display: flex; flex-direction: column; align-items: flex-start; background: var(--surface-1); border-radius: var(--radius); padding: 10px 12px; }
 .up b { color: var(--text); font-weight: 500; }
-.up button { width: 100%; margin-top: 8px; }
+.up button { width: 100%; margin-top: auto; }
+.up .desc { margin-bottom: 8px; }
 .pips { letter-spacing: 2px; color: var(--accent); }
 .help { margin-top: 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 10px 16px; font-size: 14px; }
 .help summary { cursor: pointer; font-weight: 500; }
