@@ -28,11 +28,7 @@
       <span class="stat">Studente: <b id="lv">1</b>/6</span>
     </div>
 
-    <div class="row upgrades">
-      <div class="up"><b>Mascella</b> <span class="pips" id="p_jaw"></span><br>Aura passiva, come un cron job<button data-s="jaw"></button></div>
-      <div class="up"><b>Aura</b> <span class="pips" id="p_aura"></span><br>Più carica per ogni clic<button data-s="aura"></button></div>
-      <div class="up"><b>Sguardo</b> <span class="pips" id="p_eyes"></span><br>Exploit rapidi più potenti<button data-s="eyes"></button></div>
-    </div>
+    <div class="row upgrades" id="ups"></div>
 
     <details class="help">
       <summary>Come si gioca</summary>
@@ -44,7 +40,11 @@
       </ul>
     </details>
 
-    <footer class="foot">Fatto con aura e mascella. Audio generato dal browser: alza il volume.</footer>
+    <footer class="foot">
+      Fatto con aura e mascella. Audio generato dal browser: alza il volume.
+      I progressi restano salvati solo in questo browser.
+      <button id="reset" class="link"></button>
+    </footer>
   </main>
   <script src="config.js"></script>
   <script src="game.js"></script>

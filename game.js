@@ -9,6 +9,8 @@
   const RIV = CFG.rivali;
   const TIPS = CFG.consigliProf;
   const LETTERS = CFG.lettereExploit;
+  const UPS = CFG.potenziamenti;
+  const MAX_CPS = CFG.maxCaricheSecondo || 15;
   const CH = "01$#>_{}[];/";
 
   // ---------- Canvas ----------
@@ -25,19 +27,46 @@
   window.addEventListener("resize", resize);
 
   // ---------- Stato ----------
-  let S = { jaw: 0, aura: 0, eyes: 0 }, pts = 0, lvl = 0, phase = "menu";
+  let S = freshStats(), pts = 0, lvl = 0, phase = "menu", clicks = [];
   let pA = 0, rA = 0, t = 0, shake = 0, flash = 0;
   let parts = [], txts = [], cracks = [], codeRain = [];
   let qte = null, qteT = 2.5, endT = 0, win = false, combo = 0;
   let tauntT = 1.5, bubble = null, fightT = 0, mentor = null, mentorUsed = false;
   for (let i = 0; i < 40; i++) codeRain.push({ x: Math.random(), y: Math.random(), s: .3 + Math.random() });
 
-  // Record locale (solo nel browser del giocatore)
+  // ---------- Salvataggio (solo nel browser del giocatore) ----------
+  // Il localStorage è modificabile da chiunque: va bene per il single player,
+  // ma niente di ciò che sta qui verrà mai usato per multiplayer o classifiche.
+  const SAVE_KEY = "mogArenaSave", SAVE_V = 1;
   let best = 0;
-  try { best = parseInt(localStorage.getItem("mogArenaBest") || "0", 10) || 0; } catch (e) {}
-  function saveBest() {
-    if (lvl > best) { best = lvl; try { localStorage.setItem("mogArenaBest", String(best)); } catch (e) {} }
+
+  function freshStats() { const o = {}; for (const u of UPS) o[u.id] = 0; return o; }
+  // Numero intero tra min e max, altrimenti il valore di riserva
+  function intIn(v, min, max, def) { return Number.isInteger(v) && v >= min && v <= max ? v : def; }
+
+  function load() {
+    let d = null;
+    try { d = JSON.parse(localStorage.getItem(SAVE_KEY) || "null"); } catch (e) {}
+    if (d && typeof d === "object" && d.v === SAVE_V) {
+      pts = intIn(d.pts, 0, 1e9, 0);
+      lvl = intIn(d.lvl, 0, RIV.length, 0);
+      best = intIn(d.best, 0, RIV.length, 0);
+      const st = d.stats && typeof d.stats === "object" ? d.stats : {};
+      for (const u of UPS) S[u.id] = intIn(st[u.id], 0, u.max, 0);
+      return;
+    }
+    // Primo avvio con il nuovo salvataggio: recupera il vecchio record
+    try { best = intIn(parseInt(localStorage.getItem("mogArenaBest") || "0", 10), 0, RIV.length, 0); } catch (e) {}
   }
+  function save() {
+    try { localStorage.setItem(SAVE_KEY, JSON.stringify({ v: SAVE_V, pts, lvl, best, stats: S })); } catch (e) {}
+  }
+  function saveBest() { if (lvl > best) best = lvl; save(); }
+  function resetAll() {
+    S = freshStats(); pts = 0; lvl = 0; best = 0;
+    try { localStorage.removeItem(SAVE_KEY); localStorage.removeItem("mogArenaBest"); } catch (e) {}
+  }
+  load();
 
   // ---------- Audio (generato dal browser) ----------
   let AC = null;
@@ -136,8 +165,16 @@
   }
 
   // ---------- Logica ----------
+  // Conta le cariche dell'ultimo secondo: oltre MAX_CPS vengono ignorate
+  function tooFast() {
+    const now = performance.now();
+    while (clicks.length && now - clicks[0] > 1000) clicks.shift();
+    if (clicks.length >= MAX_CPS) return true;
+    clicks.push(now); return false;
+  }
+
   function charge() {
-    if (phase !== "fight") return;
+    if (phase !== "fight" || tooFast()) return;
     pA = Math.min(100, pA + 2.1 * (1 + S.aura * .3)); combo++;
     shake = Math.max(shake, 1.5); burst(W * .25, H * .55, 4, "#5DCAA5", 4); snd(220 + pA * 4, .08, "square", .04);
     if (combo % 15 === 0) { popText(W * .25, H * .3, "sudo combo x" + combo, "#FAC775"); pA = Math.min(100, pA + 5); }
@@ -153,7 +190,7 @@
 
   function startFight() {
     phase = "fight"; pA = 0; rA = 0; qte = null; qteT = 2; combo = 0; cracks = []; parts = []; txts = [];
-    endT = 0; bubble = null; tauntT = 1.2; fightT = 0; mentor = null; mentorUsed = false;
+    endT = 0; bubble = null; tauntT = 1.2; fightT = 0; mentor = null; mentorUsed = false; clicks = [];
     document.getElementById("big").textContent = "Carica aura";
     snd(110, .4, "sawtooth", .1); ui();
   }
@@ -170,20 +207,38 @@
     } else {
       for (let i = 0; i < 14; i++) { const a = Math.random() * 6.283; cracks.push({ a, l: 60 + Math.random() * 260, j: [...Array(6)].map(() => (Math.random() - .5) * 40) }); }
       snd(55, 1.6, "sawtooth", .3); snd(40, 1.8, "square", .15);
+      save();
     }
     ui();
   }
 
-  function cst(s) { return 50 + S[s] * 60; }
+  function cst(u) { return u.costoBase + S[u.id] * u.costoPasso; }
+
+  // Pannello potenziamenti generato dal catalogo in config.js.
+  // Solo textContent, mai innerHTML: i testi non possono diventare codice.
+  const upEls = {};
+  for (const u of UPS) {
+    const box = document.createElement("div"), b = document.createElement("b"),
+      pips = document.createElement("span"), btn = document.createElement("button");
+    box.className = "up"; pips.className = "pips";
+    b.textContent = u.nome;
+    btn.onclick = () => {
+      const cost = cst(u);
+      if (S[u.id] < u.max && pts >= cost) { pts -= cost; S[u.id]++; save(); snd(520, .2, "triangle", .1); ui(); }
+    };
+    box.append(b, " ", pips, document.createElement("br"), u.desc, btn);
+    document.getElementById("ups").appendChild(box);
+    upEls[u.id] = { pips, btn };
+  }
 
   function ui() {
     document.getElementById("pts").textContent = pts;
     document.getElementById("lv").textContent = Math.min(lvl + 1, RIV.length);
-    for (const s of ["jaw", "aura", "eyes"]) {
-      document.getElementById("p_" + s).textContent = "●".repeat(S[s]) + "○".repeat(5 - S[s]);
-      const b = document.querySelector('[data-s="' + s + '"]');
-      b.textContent = S[s] >= 5 ? "Massimo" : "Potenzia (" + cst(s) + ")";
-      b.style.opacity = (S[s] < 5 && pts >= cst(s)) ? 1 : .5;
+    for (const u of UPS) {
+      const e = upEls[u.id], full = S[u.id] >= u.max;
+      e.pips.textContent = "●".repeat(S[u.id]) + "○".repeat(u.max - S[u.id]);
+      e.btn.textContent = full ? "Massimo" : "Potenzia (" + cst(u) + ")";
+      e.btn.style.opacity = (!full && pts >= cst(u)) ? 1 : .5;
     }
     const big = document.getElementById("big");
     if (phase === "end") big.textContent = lvl >= RIV.length && win ? "Ricomincia il corso" : win ? "Prossimo studente" : "Riprova";
@@ -204,7 +259,7 @@
   });
   document.getElementById("big").onclick = () => {
     if (phase === "fight") charge();
-    else { if (lvl >= RIV.length) { lvl = 0; S = { jaw: 0, aura: 0, eyes: 0 }; pts = 0; } startFight(); }
+    else { if (lvl >= RIV.length) { lvl = 0; S = freshStats(); pts = 0; save(); } startFight(); }
   };
   window.addEventListener("keydown", (e) => {
     if (e.code === "Space") {
@@ -215,10 +270,13 @@
     }
     if (phase === "fight" && qte && !mentor && e.key.toUpperCase() === qte.k) qteHit();
   });
-  document.querySelectorAll(".up button").forEach((b) => b.onclick = () => {
-    const s = b.dataset.s, cost = cst(s);
-    if (S[s] < 5 && pts >= cost) { pts -= cost; S[s]++; snd(520, .2, "triangle", .1); ui(); }
-  });
+  const resetBtn = document.getElementById("reset");
+  resetBtn.textContent = CFG.testoAzzera;
+  resetBtn.onclick = () => {
+    if (phase === "fight" || !confirm(CFG.confermaAzzera)) return;
+    resetAll(); phase = "menu"; win = false;
+    document.getElementById("big").textContent = "Inizia la sfida"; ui();
+  };
   ui();
 
   // ---------- Loop principale ----------

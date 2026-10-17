@@ -8,6 +8,23 @@ window.MOG_CONFIG = {
   dedicaTitolo: "Dedicato al prof Paolino",
   dedicaSottotitolo: "Grazie per tutto quello che ci ha insegnato",
 
+  // Massimo di cariche d'aura contate in un secondo: oltre questo limite
+  // i clic vengono ignorati, così un autoclicker non dà vantaggio
+  maxCaricheSecondo: 15,
+
+  // Potenziamenti acquistabili con i mog points.
+  // id = nome interno usato da game.js (non cambiarlo), max = livello massimo,
+  // costo del livello successivo = costoBase + livello attuale × costoPasso
+  potenziamenti: [
+    { id: "jaw",  nome: "Mascella", desc: "Aura passiva, come un cron job", max: 5, costoBase: 50, costoPasso: 60 },
+    { id: "aura", nome: "Aura",     desc: "Più carica per ogni clic",       max: 5, costoBase: 50, costoPasso: 60 },
+    { id: "eyes", nome: "Sguardo",  desc: "Exploit rapidi più potenti",     max: 5, costoBase: 50, costoPasso: 60 }
+  ],
+
+  // Testi del salvataggio
+  testoAzzera: "Azzera progressi",
+  confermaAzzera: "Vuoi cancellare mog points, potenziamenti e record? Non si può annullare.",
+
   // Lettere usate negli eventi rapidi (exploit)
   lettereExploit: "SCUOLA",
 
