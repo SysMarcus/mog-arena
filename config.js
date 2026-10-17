@@ -30,6 +30,42 @@ window.MOG_CONFIG = {
   testoPrestigio: "Prestigio: ricomincia più forte",
   infoPrestigio: "Con il prestigio ricominci il corso con un bonus permanente, ma i rivali diventano più forti.",
 
+  // Aspetto del tuo personaggio (pannello "Personaggio").
+  // La prima opzione di ogni gruppo è quella di partenza.
+  // tipo "colore" = campioni di colore, tipo "oggetto" = accessori disegnati da game.js
+  // (gli id degli oggetti sono usati da game.js per disegnarli: non cambiarli).
+  // Solo stili inventati: niente che riproduca persone reali o marchi.
+  aspetto: [
+    { id: "pelle", nome: "Pelle", tipo: "colore", opzioni: [
+      { id: "p1", nome: "Chiara",    col: "#E8C9A8" },
+      { id: "p2", nome: "Media",     col: "#CFA07A" },
+      { id: "p3", nome: "Olivastra", col: "#B07F52" },
+      { id: "p4", nome: "Scura",     col: "#7A4F2E" } ] },
+    { id: "capelli", nome: "Capelli", tipo: "colore", opzioni: [
+      { id: "nero",    nome: "Neri",    col: "#2C2C2A" },
+      { id: "castano", nome: "Castani", col: "#6B4226" },
+      { id: "biondo",  nome: "Biondi",  col: "#D8B45A" },
+      { id: "rosso",   nome: "Rossi",   col: "#B5482A" },
+      { id: "viola",   nome: "Viola",   col: "#7F77DD" },
+      { id: "verde",   nome: "Verdi",   col: "#1D9E75" } ] },
+    { id: "aura", nome: "Colore aura", tipo: "colore", opzioni: [
+      { id: "menta", nome: "Menta", col: "#5DCAA5" },
+      { id: "oro",   nome: "Oro",   col: "#EF9F27" },
+      { id: "lilla", nome: "Lilla", col: "#AFA9EC" },
+      { id: "corallo", nome: "Corallo", col: "#F0997B" },
+      { id: "cielo", nome: "Cielo", col: "#85B7EB" } ] },
+    { id: "occhiali", nome: "Occhiali", tipo: "oggetto", opzioni: [
+      { id: "nessuno", nome: "Nessuno" },
+      { id: "tondi",   nome: "Tondi" },
+      { id: "sole",    nome: "Da sole" } ] },
+    { id: "testa", nome: "In testa", tipo: "oggetto", opzioni: [
+      { id: "nessuno",    nome: "Niente" },
+      { id: "cappellino", nome: "Cappellino" },
+      { id: "cuffie",     nome: "Cuffie" },
+      { id: "bandana",    nome: "Bandana" },
+      { id: "felpa",      nome: "Cappuccio" } ] }
+  ],
+
   // Testi del salvataggio
   testoAzzera: "Azzera progressi",
   confermaAzzera: "Vuoi cancellare mog points, potenziamenti, prestigio e record? Non si può annullare.",

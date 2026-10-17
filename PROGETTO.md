@@ -33,6 +33,8 @@ Meccaniche principali:
 - Potenziamenti con i mog points: Mascella (aura passiva), Aura (carica per clic), Sguardo (exploit più forti),
   Riflessi (più tempo per gli exploit), Carisma (più mog points).
 - Prestigio a fine corso: si ricomincia con un bonus permanente di aura contro rivali più veloci.
+- Personaggio personalizzabile (pannello "Personaggio"): pelle, capelli, colore aura, occhiali, accessori
+  in testa. Opzioni in `config.js` → `aspetto`, disegnate sul canvas da `game.js`.
   Sono definiti in `config.js` (`potenziamenti`) e i pulsanti vengono generati da `game.js`.
 - Progressi (mog points, potenziamenti, livello, record) salvati nel `localStorage` del browser
   sotto la chiave `mogArenaSave`, con pulsante "Azzera progressi".
@@ -81,3 +83,4 @@ Meccaniche principali:
 | 2026-10-17 | Aggiunto `FEATURES.md`: piano delle feature future con ordine consigliato e rischi di sicurezza |
 | 2026-10-17 | Salvataggio progressi, potenziamenti definiti in `config.js`, limite di 15 clic al secondo |
 | 2026-10-17 | Nuovi potenziamenti Riflessi e Carisma, prestigio a fine corso |
+| 2026-10-17 | Personaggio personalizzabile con anteprima: pelle, capelli, aura, occhiali, accessori |

@@ -118,7 +118,7 @@ invece di averli scritti a mano in `index.html`.
 
 ## 3. Personaggio customizzabile
 
-**Stato:** da decidere · **Dimensione:** M · **Dipende da:** 0
+**Stato:** fatta (oggetti tutti gratuiti finché non arriva il negozio) · **Dimensione:** M · **Dipende da:** 0
 
 **Cosa:** il giocatore sceglie l'aspetto del proprio personaggio: colore dell'aura, pelle, capelli,
 occhiali, cappellino o cappuccio, accessori, e un nome da mostrare sotto il personaggio al posto di "Tu".
@@ -139,6 +139,12 @@ e disegnato sul canvas o inserito con `textContent`. In multiplayer il nome dell
 è input non fidato: va ricontrollato sul server e filtrato contro insulti.
 
 **Deciso:** il nome del giocatore arriva solo con il multiplayer (feature 7).
+
+**Fatto:** pannello "Personaggio" sotto l'arena con anteprima dal vivo. Si scelgono pelle (4 tonalità),
+capelli (6 colori), colore dell'aura (5), occhiali (nessuno, tondi, da sole) e cosa indossare in testa
+(niente, cappellino, cuffie, bandana, cappuccio). Le opzioni stanno in `config.js` → `aspetto`; l'aspetto
+è salvato con i progressi e al caricamento si accettano solo id presenti nel catalogo. Mascella e sguardo
+continuano a crescere con i potenziamenti. Con il negozio (feature 4) alcune opzioni diventeranno acquistabili.
 
 ---
 
