@@ -12,11 +12,12 @@
   const UPS = CFG.potenziamenti;
   const MAX_CPS = CFG.maxCaricheSecondo || 15;
   const PRE = CFG.prestigio;
+  const LOOKS = CFG.aspetto;
   const CH = "01$#>_{}[];/";
 
   // ---------- Canvas ----------
   const cv = document.getElementById("cv");
-  const c = cv.getContext("2d");
+  let c = cv.getContext("2d");
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   let W, H;
   function resize() {
@@ -28,7 +29,7 @@
   window.addEventListener("resize", resize);
 
   // ---------- Stato ----------
-  let S = freshStats(), pts = 0, lvl = 0, prestige = 0, phase = "menu", clicks = [];
+  let S = freshStats(), look = freshLook(), pts = 0, lvl = 0, prestige = 0, phase = "menu", clicks = [];
   let pA = 0, rA = 0, t = 0, shake = 0, flash = 0;
   let parts = [], txts = [], cracks = [], codeRain = [];
   let qte = null, qteT = 2.5, endT = 0, win = false, combo = 0;
@@ -42,6 +43,7 @@
   let best = 0;
 
   function freshStats() { const o = {}; for (const u of UPS) o[u.id] = 0; return o; }
+  function freshLook() { const o = {}; for (const g of LOOKS) o[g.id] = g.opzioni[0].id; return o; }
   // Numero intero tra min e max, altrimenti il valore di riserva
   function intIn(v, min, max, def) { return Number.isInteger(v) && v >= min && v <= max ? v : def; }
 
@@ -55,17 +57,20 @@
       prestige = intIn(d.prestige, 0, 999, 0);
       const st = d.stats && typeof d.stats === "object" ? d.stats : {};
       for (const u of UPS) S[u.id] = intIn(st[u.id], 0, u.max, 0);
+      // Aspetto: si accettano solo id presenti nel catalogo
+      const lk = d.look && typeof d.look === "object" ? d.look : {};
+      for (const g of LOOKS) if (g.opzioni.some((o) => o.id === lk[g.id])) look[g.id] = lk[g.id];
       return;
     }
     // Primo avvio con il nuovo salvataggio: recupera il vecchio record
     try { best = intIn(parseInt(localStorage.getItem("mogArenaBest") || "0", 10), 0, RIV.length, 0); } catch (e) {}
   }
   function save() {
-    try { localStorage.setItem(SAVE_KEY, JSON.stringify({ v: SAVE_V, pts, lvl, best, prestige, stats: S })); } catch (e) {}
+    try { localStorage.setItem(SAVE_KEY, JSON.stringify({ v: SAVE_V, pts, lvl, best, prestige, stats: S, look })); } catch (e) {}
   }
   function saveBest() { if (lvl > best) best = lvl; save(); }
   function resetAll() {
-    S = freshStats(); pts = 0; lvl = 0; best = 0; prestige = 0;
+    S = freshStats(); look = freshLook(); pts = 0; lvl = 0; best = 0; prestige = 0;
     try { localStorage.removeItem(SAVE_KEY); localStorage.removeItem("mogArenaBest"); } catch (e) {}
   }
   load();
@@ -100,7 +105,14 @@
   function popText(x, y, s, col) { txts.push({ x, y, s, col, l: 1 }); }
 
   // ---------- Disegno personaggi ----------
-  function head(x, y, sc, jaw, eyes, col, aura, lose, glow, hood) {
+  // Opzione scelta di un gruppo dell'aspetto (vedi config.js → aspetto)
+  function pick(gid) { const g = LOOKS.find((x) => x.id === gid); return g.opzioni.find((o) => o.id === look[gid]) || g.opzioni[0]; }
+  function playerLook() { return { skin: pick("pelle").col, hair: pick("capelli").col, aura: pick("aura").col, glasses: pick("occhiali").id, hat: pick("testa").id }; }
+
+  // L = aspetto del giocatore; i rivali lo omettono e usano i colori di sempre
+  function head(x, y, sc, jaw, eyes, col, aura, lose, glow, hood, L) {
+    L = L || {};
+    if (L.hat === "felpa") hood = 1;
     c.save(); c.translate(x, y); c.scale(sc, sc);
     if (aura > 5) {
       for (let k = 0; k < 3; k++) {
@@ -113,12 +125,15 @@
     }
     if (hood) { c.fillStyle = "#2C2C2A"; c.beginPath(); c.moveTo(-78, 90); c.quadraticCurveTo(-85, -110, 0, -112); c.quadraticCurveTo(85, -110, 78, 90); c.closePath(); c.fill(); }
     const jw = 38 + jaw * 9, chin = 14 + jaw * 4;
-    c.fillStyle = lose ? "#5F5E5A" : "#E8C9A8"; c.strokeStyle = "#2C2C2A"; c.lineWidth = 2.5;
+    c.fillStyle = lose ? "#5F5E5A" : (L.skin || "#E8C9A8"); c.strokeStyle = "#2C2C2A"; c.lineWidth = 2.5;
     c.beginPath(); c.moveTo(-50, -55); c.quadraticCurveTo(0, -95, 50, -55); c.lineTo(52, 0); c.lineTo(jw, 35); c.lineTo(chin, 70); c.lineTo(-chin, 70); c.lineTo(-jw, 35); c.lineTo(-52, 0); c.closePath(); c.fill(); c.stroke();
-    if (!hood) { c.fillStyle = "#2C2C2A"; c.beginPath(); c.moveTo(-54, -50); c.quadraticCurveTo(-30, -110, 10, -92); c.quadraticCurveTo(50, -110, 56, -48); c.quadraticCurveTo(20, -72, -54, -50); c.fill(); }
+    if (!hood) { c.fillStyle = L.hair || "#2C2C2A"; c.beginPath(); c.moveTo(-54, -50); c.quadraticCurveTo(-30, -110, 10, -92); c.quadraticCurveTo(50, -110, 56, -48); c.quadraticCurveTo(20, -72, -54, -50); c.fill(); }
     if (jaw >= 3) { c.strokeStyle = "rgba(44,44,42,.35)"; c.lineWidth = 2; c.beginPath(); c.moveTo(-jw + 6, 32); c.lineTo(-chin - 4, 62); c.moveTo(jw - 6, 32); c.lineTo(chin + 4, 62); c.stroke(); }
     const tilt = lose ? -.25 : eyes * .06;
-    if (eyes >= 4 && !lose) {
+    if (L.glasses === "sole" && !lose) {
+      c.fillStyle = "#0a0a12"; c.beginPath(); c.roundRect(-46, -30, 40, 20, 8); c.roundRect(6, -30, 40, 20, 8); c.fill(); c.fillRect(-8, -25, 16, 4);
+      c.strokeStyle = "rgba(255,255,255,.35)"; c.lineWidth = 2; c.beginPath(); c.moveTo(-38, -25); c.lineTo(-28, -25); c.moveTo(14, -25); c.lineTo(24, -25); c.stroke();
+    } else if (eyes >= 4 && !lose && L.glasses !== "tondi") {
       c.fillStyle = "#0a0a12"; c.beginPath(); c.roundRect(-46, -28, 40, 18, 5); c.roundRect(6, -28, 40, 18, 5); c.fill(); c.fillRect(-8, -24, 16, 4);
       c.fillStyle = "#5DCAA5"; c.font = "9px monospace"; c.textAlign = "left"; c.fillText("root#", -42, -16); c.fillText("mog_", 10, -16);
     } else {
@@ -130,6 +145,7 @@
         c.save(); c.translate(sx * 24, -34); c.rotate(sx * (lose ? .35 : -.15 - eyes * .04)); c.fillRect(-14, -2, 28, 4); c.restore();
       }
     }
+    if (L.glasses === "tondi") { c.strokeStyle = "#2C2C2A"; c.lineWidth = 2.5; c.beginPath(); c.arc(-24, -20, 14, 0, 6.3); c.moveTo(38, -20); c.arc(24, -20, 14, 0, 6.3); c.moveTo(-10, -22); c.lineTo(10, -22); c.stroke(); }
     c.strokeStyle = "#2C2C2A"; c.lineWidth = 2.5; c.beginPath(); c.moveTo(0, -10); c.lineTo(-5, 14); c.lineTo(4, 16); c.stroke();
     c.beginPath();
     if (lose) c.arc(0, 52, 10, 3.6, 5.8);
@@ -137,7 +153,24 @@
     else { c.moveTo(-12, 42); c.lineTo(12, 42); }
     c.stroke();
     if (lose) { c.fillStyle = "#85B7EB"; c.beginPath(); c.ellipse(-28, (t * 40) % 30, 3, 5, 0, 0, 6.3); c.fill(); }
+    if (L.hat) hat(L.hat, col);
     c.restore();
+  }
+
+  // Accessori in testa, disegnati nello stesso sistema di coordinate di head()
+  function hat(id, col) {
+    c.fillStyle = col; c.strokeStyle = "#2C2C2A"; c.lineWidth = 2.5;
+    if (id === "cappellino") {
+      c.beginPath(); c.moveTo(-58, -54); c.bezierCurveTo(-58, -128, 58, -128, 58, -54); c.closePath(); c.fill(); c.stroke();
+      c.beginPath(); c.ellipse(38, -54, 44, 8, 0, 0, 6.3); c.fill(); c.stroke();
+    } else if (id === "cuffie") {
+      c.strokeStyle = "#444441"; c.lineWidth = 7; c.beginPath(); c.arc(0, -22, 64, Math.PI * 1.05, Math.PI * 1.95); c.stroke();
+      c.strokeStyle = "#2C2C2A"; c.lineWidth = 2;
+      c.beginPath(); c.roundRect(-68, -36, 18, 38, 7); c.roundRect(50, -36, 18, 38, 7); c.fill(); c.stroke();
+    } else if (id === "bandana") {
+      c.beginPath(); c.moveTo(-53, -60); c.quadraticCurveTo(0, -84, 53, -60); c.lineTo(53, -47); c.quadraticCurveTo(0, -70, -53, -47); c.closePath(); c.fill(); c.stroke();
+      c.beginPath(); c.moveTo(52, -54); c.lineTo(72, -64); c.lineTo(68, -44); c.closePath(); c.fill(); c.stroke();
+    }
   }
 
   function prof(x, y, sc, wave) {
@@ -182,7 +215,7 @@
   function charge() {
     if (phase !== "fight" || tooFast()) return;
     pA = Math.min(100, pA + 2.1 * (1 + S.aura * .3) * auraMul()); combo++;
-    shake = Math.max(shake, 1.5); burst(W * .25, H * .55, 4, "#5DCAA5", 4); snd(220 + pA * 4, .08, "square", .04);
+    shake = Math.max(shake, 1.5); burst(W * .25, H * .55, 4, pick("aura").col, 4); snd(220 + pA * 4, .08, "square", .04);
     if (combo % 15 === 0) { popText(W * .25, H * .3, "sudo combo x" + combo, "#FAC775"); pA = Math.min(100, pA + 5); }
   }
 
@@ -239,7 +272,34 @@
     upEls[u.id] = { pips, btn };
   }
 
+  // Pannello Personaggio generato da config.js → aspetto (solo textContent)
+  const lookBtns = [];
+  for (const g of LOOKS) {
+    const row = document.createElement("div"), lab = document.createElement("b"), opts = document.createElement("div");
+    row.className = "lookrow"; lab.textContent = g.nome; row.append(lab, opts);
+    for (const o of g.opzioni) {
+      const btn = document.createElement("button");
+      if (g.tipo === "colore") { btn.className = "sw"; btn.style.background = o.col; btn.title = o.nome; btn.setAttribute("aria-label", g.nome + ": " + o.nome); }
+      else btn.textContent = o.nome;
+      btn.onclick = () => { look[g.id] = o.id; save(); ui(); };
+      opts.appendChild(btn); lookBtns.push({ btn, g: g.id, o: o.id });
+    }
+    document.getElementById("lookopts").appendChild(row);
+  }
+
+  // Anteprima del personaggio nel pannello, ridisegnata solo quando è aperto
+  const pv = document.getElementById("pv"), pc = pv.getContext("2d"), lookBox = document.getElementById("lookbox");
+  pv.width = 160 * dpr; pv.height = 180 * dpr; pc.setTransform(dpr, 0, 0, dpr, 0, 0);
+  function drawPreview() {
+    if (!lookBox.open) return;
+    const main = c, PL = playerLook(); c = pc;
+    c.fillStyle = "#0a0a12"; c.fillRect(0, 0, 160, 180);
+    head(80, 104, .55, S.jaw + 1, S.eyes + 1, PL.aura, 60, false, true, 0, PL);
+    c = main;
+  }
+
   function ui() {
+    for (const b of lookBtns) b.btn.setAttribute("aria-pressed", look[b.g] === b.o ? "true" : "false");
     document.getElementById("pts").textContent = pts;
     document.getElementById("lv").textContent = Math.min(lvl + 1, RIV.length);
     for (const u of UPS) {
@@ -338,7 +398,8 @@
 
     const m = Math.min(1, W / 680) * 1.05;
     const finale = phase === "end" && win && lvl >= RIV.length;
-    head(px, hy, ps * m, S.jaw + 1, S.eyes + 1, "#5DCAA5", phase === "end" ? (win ? 100 : 0) : pA, phase === "end" && !win, phase === "end" && win, 0);
+    const PL = playerLook();
+    head(px, hy, ps * m, S.jaw + 1, S.eyes + 1, PL.aura, phase === "end" ? (win ? 100 : 0) : pA, phase === "end" && !win, phase === "end" && win, 0, PL);
     if (!finale) head(rx, hy, rsc * m, R.j, R.e, R.col, phase === "end" ? (win ? 0 : 100) : rA, phase === "end" && win, phase === "end" && !win, R.hood);
 
     c.font = "500 13px sans-serif"; c.textAlign = "center";
@@ -423,6 +484,7 @@
       }
     }
     if (flash > .02) { c.fillStyle = "rgba(255,255,255," + flash + ")"; c.fillRect(0, 0, W, H); }
+    drawPreview();
     requestAnimationFrame(loop);
   }
   requestAnimationFrame(loop);
